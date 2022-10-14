@@ -1,10 +1,16 @@
-# lib-linkedin-url (IN PROGRESS)
+# lib-linkedin-url
 
-Utilities to work with LinkedIn profiles URLs: get the canonical url, validate, etc.
+Utility library to work with LinkedIn profile URLs: get the canonical url, validate, etc.
 
 ## Features
-- Supports multiple linkedIn URL formats (include 'old' ones)
+
+- Supports multiple linkedIn URL formats (including the 'old' ones)
 - Written in typescript
+- Zero dependencies
+
+## References
+
+- https://stackoverflow.com/questions/8450403/how-to-validate-a-linkedin-public-profile-url
 
 ## License
 
