@@ -1,4 +1,4 @@
-# lib-linkedin-url
+# lib-linkedin-url (in development)
 
 Utility library to work with LinkedIn profile URLs: get the canonical url, validate, etc.
 
