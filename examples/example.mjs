@@ -1,8 +1,7 @@
-import { extractCompanyLinkedInProfileName } from "./../dist/index.js";
 import * as li from "./../dist/index.js";
 
 console.log(
-  extractCompanyLinkedInProfileName(
+  li.extractCompanyLinkedInProfileName(
     "https://www.linkedin.com/company/1234567890/"
   )
 );

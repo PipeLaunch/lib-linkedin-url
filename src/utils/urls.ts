@@ -11,6 +11,11 @@ export function addHttpsIfMissing(url: string): string {
   return `https://${url}`;
 }
 
+/**
+ * @description Cleans the url from any parameters, slashes and end #
+ * @param url {string} url to clean
+ * @returns {string} cleaned url
+ */
 export function cleanUrl(url: string): string {
   if (typeof url !== "string" || !url) {
     return "";

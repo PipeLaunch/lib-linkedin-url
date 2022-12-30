@@ -1,8 +1,3 @@
-interface TldTable {
-  t: string; // tld
-  c: string; // country
-}
-
 export const TLD_TABLE: TldTable[] = [
   {
     t: "ac",

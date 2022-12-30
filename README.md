@@ -2,7 +2,7 @@
 <div align="center">
   <pre>
     <br />
-      <h1>Linkedin URL (beta)</h1>
+      <h1>Linkedin URL</h1>
   </pre>
     <br />
     <code><a href="https://github.com/PipeLaunch/lib-linkedin-url/network/members"
@@ -45,6 +45,7 @@
 
 - Supports multiple linkedIn URL formats (including the 'old' ones)
 - Written in typescript
+- With unit tests
 - Zero dependencies
 
 ## Installation
@@ -72,14 +73,14 @@ console.log(
     "https://www.linkedin.com/company/pipelaunch/"
   )
 );
-// pipelaunch
+// -> pipelaunch
 
 console.log(
   isValidCompanyLinkedInProfileUrl(
     "https://www.linkedin.com/company/pipelaunch/"
   )
 );
-// true
+// -> true
 ```
 
 ## Features
@@ -87,7 +88,9 @@ console.log(
 ### Extract the profile from a URL
 
 ```js
-extractLinkedInProfileName("https://www.linkedin.com/company/pipelaunch/"); // -> pipelaunch
+extractCompanyLinkedInProfileName(
+  "https://www.linkedin.com/company/pipelaunch/"
+); // -> pipelaunch
 
 extractLinkedInProfileName("https://www.linkedin.com/in/user/"); // -> user
 
@@ -99,9 +102,17 @@ extractLinkedInProfileName("https://linkedin.com/in/UserR?view=1"); // -> user
 ```js
 isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/test"); // -> true
 
-isValidCompanyLinkedInProfileUrl("linkedin.com/in/test"); // -> false (is a not company profile)
+isValidCompanyLinkedInProfileUrl("linkedin.com/in/test"); // -> false (is a person profile)
 
 isValidLinkedInProfileUrl("https://linkedin.com/in/test"); // -> true
+```
+
+### Extract Country Name and Country Name
+
+```js
+extractLinkedInSubdomain("https://de.linkedin.com/company/test"); // -> de
+
+extractCountryName("https://de.linkedin.com/company/test"); // -> Germany
 ```
 
 ## References
