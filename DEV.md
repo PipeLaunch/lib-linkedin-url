@@ -2,4 +2,6 @@
 
 ## Publish
 
-`npm adduser`
+- `npm adduser`
+- use 2FA from email
+- `npm publish`
