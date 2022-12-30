@@ -36,6 +36,7 @@ describe("extractCompanyLinkedInProfileName", () => {
     });
     it("invalid", () => {
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/in/test")).toEqual("");
+        expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://www.linkedin2com/company/test")).toEqual("");
     });
 });
 //# sourceMappingURL=companyProfiles.test.js.map

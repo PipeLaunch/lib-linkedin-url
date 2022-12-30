@@ -18,9 +18,9 @@ export function isValidLinkedInProfileUrl(
   url = addHttpsIfMissing(url);
 
   const regexNonNumeric =
-    /^https?:\/\/((www|\w\w)\.)?linkedin.com\/((in\/[^/]+\/?)|(mwlite\/|m\/)?in\/)/gi;
+    /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/((in\/[^/]+\/?)|(mwlite\/|m\/)?in\/)/gi;
   const regexNumeric =
-    /^https?:\/\/((www|\w\w)\.)?linkedin.com\/((in\/[^/]+\/?)|(pub\/[^/]+\/((\w|\d)+\/?){3})|(mwlite\/|m\/)?in\/)/gi;
+    /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/((in\/[^/]+\/?)|(pub\/[^/]+\/((\w|\d)+\/?){3})|(mwlite\/|m\/)?in\/)/gi;
 
   const regex = options.numeric ? regexNumeric : regexNonNumeric;
   const validLinkedInProfileUrl = url.match(regex) !== null;

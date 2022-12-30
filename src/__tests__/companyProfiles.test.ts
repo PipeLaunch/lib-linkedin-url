@@ -114,5 +114,9 @@ describe("extractCompanyLinkedInProfileName", () => {
     expect(
       extractCompanyLinkedInProfileName("https://linkedin.com/in/test")
     ).toEqual("");
+
+    expect(
+      extractCompanyLinkedInProfileName("https://www.linkedin2com/company/test")
+    ).toEqual("");
   });
 });

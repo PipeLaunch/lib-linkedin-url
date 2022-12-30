@@ -8,7 +8,7 @@ function isValidCompanyLinkedInProfileUrl(url) {
         return false;
     }
     url = (0, urls_1.addHttpsIfMissing)(url);
-    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin.com\/company\/(\w|\d)/gi;
+    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/company\/(\w|\d)/gi;
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }
@@ -30,9 +30,9 @@ function generateCanonicalCompanyLinkedInProfileUrl(linkedInProfileUrl, options 
     if (options.keepTld) {
         const extractedDomain = (0, generic_1.extractLinkedInSubdomain)(linkedInProfileUrl);
         const tld = extractedDomain ? extractedDomain : "www";
-        return `https://${tld}.linkedin.com/company/${linkedInProfileName}`;
+        return `https://${tld}.linkedin\.com/company/${linkedInProfileName}`;
     }
-    return `https://linkedin.com/company/${linkedInProfileName}`;
+    return `https://linkedin\.com/company/${linkedInProfileName}`;
 }
 exports.generateCanonicalCompanyLinkedInProfileUrl = generateCanonicalCompanyLinkedInProfileUrl;
 //# sourceMappingURL=companyProfiles.js.map

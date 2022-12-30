@@ -8,7 +8,7 @@ export function isValidCompanyLinkedInProfileUrl(url: string): boolean {
 
   url = addHttpsIfMissing(url);
 
-  const regex = /^https?:\/\/((www|\w\w)\.)?linkedin.com\/company\/(\w|\d)/gi;
+  const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/company\/(\w|\d)/gi;
 
   const validLinkedInProfileUrl = url.match(regex) !== null;
 

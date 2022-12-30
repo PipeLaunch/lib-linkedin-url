@@ -1,7 +1,7 @@
 {
   "name": "lib-linkedin-url",
-  "version": "1.0.0-beta.1",
-  "description": "Utility library to work with LinkedIn profiles URLs: get the canonical url, validate, etc.",
+  "version": "1.0.0",
+  "description": "Utility library to work with LinkedIn profile URLs: get the canonical url, validate, etc.",
   "keywords": [
     "linkedin",
     "canonical",
@@ -20,7 +20,8 @@
     "!**/__tests__/**/*"
   ],
   "scripts": {
-    "build": "npm run clean && tsc",
+    "build": "tsc",
+    "prebuild": "npm run clean",
     "run": "tsc && node ./dist/index.js",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit && eslint src --ext .ts",
@@ -28,28 +29,23 @@
     "test:unit": "jest",
     "test": "npm run lint && npm run test:unit",
     "prepublishOnly": "npm run test && npm run build",
-    "publish": "npm publish --tag beta",
+    "publish": "npm publish",
     "changelog": "auto-changelog -p && git add CHANGELOG.md"
   },
   "devDependencies": {
-    "@types/jest": "^29.1.2",
-    "@types/node": "^16.11.65",
-    "@typescript-eslint/eslint-plugin": "^5.40.0",
-    "@typescript-eslint/parser": "^5.40.0",
+    "@tsconfig/node18": "^1.0.1",
+    "@types/jest": "^29.2.4",
+    "@types/node": "^18.11.18",
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.47.1",
     "auto-changelog": "^2.4.0",
-    "eslint": "^8.25.0",
-    "husky": "^8.0.1",
-    "jest": "^29.1.2",
+    "eslint": "^8.30.0",
+    "jest": "^29.3.1",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.4"
+    "typescript": "^4.9.4"
   },
   "engines": {
-    "node": ">=16.0.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "git stash --keep-index --include-untracked && npm run build && echo 'building done!' && git add --all && git stash pop"
-    }
+    "node": ">=18.0.0"
   }
 }
