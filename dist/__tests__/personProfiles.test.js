@@ -7,6 +7,9 @@ describe("isValidLinkedInProfileUrl", () => {
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("http://linkedin.com/in/test")).toBeTruthy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("LINKEDIN.COM/IN/TEST")).toBeTruthy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("linkedin.com/in/test")).toBeTruthy();
+        // expect(
+        //   isValidLinkedInProfileUrl("https://linkedin.com/profile/view?id=test")
+        // ).toBeTruthy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://linkedin.com/mwlite/in/test")).toBeTruthy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://linkedin.com/m/in/test")).toBeTruthy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://linkedin.com/pub/test/01/01", {

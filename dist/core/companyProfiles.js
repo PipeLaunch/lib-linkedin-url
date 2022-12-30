@@ -30,9 +30,9 @@ function generateCanonicalCompanyLinkedInProfileUrl(linkedInProfileUrl, options 
     if (options.keepTld) {
         const extractedDomain = (0, generic_1.extractLinkedInSubdomain)(linkedInProfileUrl);
         const tld = extractedDomain ? extractedDomain : "www";
-        return `https://${tld}.linkedin\.com/company/${linkedInProfileName}`;
+        return `https://${tld}.linkedin.com/company/${linkedInProfileName}`;
     }
-    return `https://linkedin\.com/company/${linkedInProfileName}`;
+    return `https://linkedin.com/company/${linkedInProfileName}`;
 }
 exports.generateCanonicalCompanyLinkedInProfileUrl = generateCanonicalCompanyLinkedInProfileUrl;
 //# sourceMappingURL=companyProfiles.js.map

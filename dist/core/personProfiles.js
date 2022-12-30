@@ -3,6 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateCanonicalLinkedInProfileUrl = exports.extractLinkedInProfileName = exports.isValidLinkedInProfileUrl = void 0;
 const urls_1 = require("../utils/urls");
 const generic_1 = require("./generic");
+/**
+ * @description validate linkedin profile url
+ * @param url linkedin url
+ * @param numeric enable to validate also profiles like http://nl.linkedin.com/pub/other-name/11/223/544
+ * @returns {Boolean} true if url is a valid linkedin url
+ */
 function isValidLinkedInProfileUrl(url, options = {}) {
     if (typeof url !== "string" || !url) {
         return false;
@@ -15,6 +21,11 @@ function isValidLinkedInProfileUrl(url, options = {}) {
     return validLinkedInProfileUrl;
 }
 exports.isValidLinkedInProfileUrl = isValidLinkedInProfileUrl;
+/**
+ * @description Extracts the name of the linkedin profile from the url
+ * @param {String} linkedInProfileUrl
+ * @returns {String} linkedin profile name
+ */
 function extractLinkedInProfileName(linkedInProfileUrl) {
     if (!isValidLinkedInProfileUrl(linkedInProfileUrl, { numeric: false }))
         return "";
@@ -32,9 +43,9 @@ function generateCanonicalLinkedInProfileUrl(linkedInProfileUrl, options = {}) {
     if (options.keepTld) {
         const extractedDomain = (0, generic_1.extractLinkedInSubdomain)(linkedInProfileUrl);
         const tld = extractedDomain ? extractedDomain : "www";
-        return `https://${tld}\.linkedin\.com/in/${linkedInProfileName}`;
+        return `https://${tld}.linkedin.com/in/${linkedInProfileName}`;
     }
-    return `https://linkedin\.com/in/${linkedInProfileName}`;
+    return `https://linkedin.com/in/${linkedInProfileName}`;
 }
 exports.generateCanonicalLinkedInProfileUrl = generateCanonicalLinkedInProfileUrl;
 //# sourceMappingURL=personProfiles.js.map

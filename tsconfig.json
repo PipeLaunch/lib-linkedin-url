@@ -91,6 +91,6 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"],
+  // "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"],
   "extends": "@tsconfig/node18/tsconfig.json"
 }
