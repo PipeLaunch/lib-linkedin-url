@@ -8,7 +8,7 @@ function isValidCompanyLinkedInProfileUrl(url) {
         return false;
     }
     url = (0, urls_1.addHttpsIfMissing)(url);
-    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/company\/(\w|\d)/gi;
+    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/company\/(\w+|\d+|%[0-9A-Fa-f]{2})/gi;
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }

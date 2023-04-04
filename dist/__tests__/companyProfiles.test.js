@@ -29,6 +29,7 @@ describe("generateCanonicalCompanyLinkedInProfileUrl", () => {
 });
 describe("extractCompanyLinkedInProfileName", () => {
     it("valid", () => {
+        expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://cn.linkedin.com/company/%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8")).toEqual("%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/test")).toEqual("test");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/TEST?test=1")).toEqual("TEST");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/test#home")).toEqual("test");
@@ -37,6 +38,8 @@ describe("extractCompanyLinkedInProfileName", () => {
     it("invalid", () => {
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/in/test")).toEqual("");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://www.linkedin2com/company/test")).toEqual("");
+        expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://www.linkedin.com/company/")).toEqual("");
+        expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://www.linkedin.com/company//")).toEqual("");
     });
 });
 //# sourceMappingURL=companyProfiles.test.js.map
