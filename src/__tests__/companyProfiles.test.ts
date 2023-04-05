@@ -89,6 +89,12 @@ describe("extractCompanyLinkedInProfileName", () => {
   it("valid", () => {
     expect(
       extractCompanyLinkedInProfileName(
+        "https://www.linkedin.com/company/中国投资有限责任公司/"
+      )
+    ).toEqual("中国投资有限责任公司");
+
+    expect(
+      extractCompanyLinkedInProfileName(
         "https://cn.linkedin.com/company/%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8"
       )
     ).toEqual(
