@@ -35,6 +35,10 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     expect(
       isValidCompanyLinkedInProfileUrl("www.test.com/in/test")
     ).toBeFalsy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/company/")
+    ).toBeFalsy();
   });
 });
 
@@ -122,6 +126,10 @@ describe("extractCompanyLinkedInProfileName", () => {
         "https://linkedin.com/company/test/10/1"
       )
     ).toEqual("test");
+
+    expect(
+      extractCompanyLinkedInProfileName("https://www.linkedin.com/company/")
+    ).toEqual("");
   });
 
   it("invalid", () => {
