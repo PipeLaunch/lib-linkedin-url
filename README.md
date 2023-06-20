@@ -102,6 +102,8 @@ extractLinkedInProfileName("https://linkedin.com/in/UserR?view=1"); // -> user
 ```js
 isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/test"); // -> true
 
+isValidCompanyLinkedInProfileUrl("https://linkedin.com/school/test"); // -> true, school is a "company"
+
 isValidCompanyLinkedInProfileUrl("linkedin.com/in/test"); // -> false (is a person profile)
 
 isValidLinkedInProfileUrl("https://linkedin.com/in/test"); // -> true

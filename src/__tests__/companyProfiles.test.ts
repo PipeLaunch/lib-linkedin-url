@@ -2,6 +2,7 @@ import {
   isValidCompanyLinkedInProfileUrl,
   generateCanonicalCompanyLinkedInProfileUrl,
   extractCompanyLinkedInProfileName,
+  isValidSchoolLinkedInProfileUrl,
 } from "../core/companyProfiles";
 
 describe("isValidCompanyLinkedInProfileUrl", () => {
@@ -25,6 +26,10 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     expect(
       isValidCompanyLinkedInProfileUrl("HTTP://WWW.LINKEDIN.COM/COMPANY/TEST")
     ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl("http://linkedin.com/school/test")
+    ).toBeTruthy();
   });
 
   it("invalid", () => {
@@ -38,6 +43,56 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
 
     expect(
       isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/company/")
+    ).toBeFalsy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/school/")
+    ).toBeFalsy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/schol/test")
+    ).toBeFalsy();
+  });
+});
+
+describe("isValidSchoolLinkedInProfileUrl", () => {
+  it("valid", () => {
+    expect(
+      isValidSchoolLinkedInProfileUrl("https://linkedin.com/school/test")
+    ).toBeTruthy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl("http://linkedin.com/school/test")
+    ).toBeTruthy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl("linkedin.com/school/test")
+    ).toBeTruthy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl("http://www.linkedin.com/school/test")
+    ).toBeTruthy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl("HTTP://WWW.LINKEDIN.COM/school/TEST")
+    ).toBeTruthy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl("http://linkedin.com/school/test")
+    ).toBeTruthy();
+  });
+
+  it("invalid", () => {
+    expect(isValidSchoolLinkedInProfileUrl("linkedin.com/in/test")).toBeFalsy();
+
+    expect(isValidSchoolLinkedInProfileUrl("www.test.com/in/test")).toBeFalsy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl("https://www.linkedin.com/company/")
+    ).toBeFalsy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl("https://www.linkedin.com/schol/test")
     ).toBeFalsy();
   });
 });
