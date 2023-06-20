@@ -8,10 +8,30 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("linkedin.com/company/test")).toBeTruthy();
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("http://www.linkedin.com/company/test")).toBeTruthy();
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("HTTP://WWW.LINKEDIN.COM/COMPANY/TEST")).toBeTruthy();
+        expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("http://linkedin.com/school/test")).toBeTruthy();
     });
     it("invalid", () => {
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("linkedin.com/in/test")).toBeFalsy();
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("www.test.com/in/test")).toBeFalsy();
+        expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("https://www.linkedin.com/company/")).toBeFalsy();
+        expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("https://www.linkedin.com/school/")).toBeFalsy();
+        expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("https://www.linkedin.com/schol/test")).toBeFalsy();
+    });
+});
+describe("isValidSchoolLinkedInProfileUrl", () => {
+    it("valid", () => {
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("https://linkedin.com/school/test")).toBeTruthy();
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("http://linkedin.com/school/test")).toBeTruthy();
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("linkedin.com/school/test")).toBeTruthy();
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("http://www.linkedin.com/school/test")).toBeTruthy();
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("HTTP://WWW.LINKEDIN.COM/school/TEST")).toBeTruthy();
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("http://linkedin.com/school/test")).toBeTruthy();
+    });
+    it("invalid", () => {
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("linkedin.com/in/test")).toBeFalsy();
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("www.test.com/in/test")).toBeFalsy();
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("https://www.linkedin.com/company/")).toBeFalsy();
+        expect((0, companyProfiles_1.isValidSchoolLinkedInProfileUrl)("https://www.linkedin.com/schol/test")).toBeFalsy();
     });
 });
 describe("generateCanonicalCompanyLinkedInProfileUrl", () => {
@@ -35,6 +55,7 @@ describe("extractCompanyLinkedInProfileName", () => {
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/TEST?test=1")).toEqual("TEST");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/test#home")).toEqual("test");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/test/10/1")).toEqual("test");
+        expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://www.linkedin.com/company/")).toEqual("");
     });
     it("invalid", () => {
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/in/test")).toEqual("");
