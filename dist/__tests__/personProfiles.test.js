@@ -12,6 +12,7 @@ describe("isValidLinkedInProfileUrl", () => {
         // ).toBeTruthy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://linkedin.com/mwlite/in/test")).toBeTruthy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://linkedin.com/m/in/test")).toBeTruthy();
+        expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://linkedin.com/in/à-nous-la-lune-")).toBeTruthy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://linkedin.com/pub/test/01/01", {
             numeric: true,
         })).toBeTruthy();

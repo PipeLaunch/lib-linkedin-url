@@ -8,7 +8,7 @@ function isValidCompanyLinkedInProfileUrl(url) {
         return false;
     }
     url = (0, urls_1.addHttpsIfMissing)(url);
-    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(company|school)\/([a-zA-Z0-9%_\-\u4E00-\u9FCC\u3400-\u4DB5\uFA0E\uFA0F\uFA11\uFA13\uFA14\uFA1F\uFA21\uFA23\uFA24\uFA27-\uFA29\ud840-\ud868\udc00-\udfff\ud869\udc00-\uded6\udf00-\udfff\ud86a-\ud86c\udc00-\udfff\ud86d\udc00-\udf34\udf40-\udfff\ud86e\udc00-\udc1d])+$/giu;
+    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(company|school)\/[%\p{L}0-9-]+\/?/giu;
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }
@@ -18,14 +18,15 @@ function isValidSchoolLinkedInProfileUrl(url) {
         return false;
     }
     url = (0, urls_1.addHttpsIfMissing)(url);
-    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/school\/(\w+|\d+|%[0-9A-Fa-f]{2}|([\u4E00-\u9FCC\u3400-\u4DB5\uFA0E\uFA0F\uFA11\uFA13\uFA14\uFA1F\uFA21\uFA23\uFA24\uFA27-\uFA29]|[\ud840-\ud868][\udc00-\udfff]|\ud869[\udc00-\uded6\udf00-\udfff]|[\ud86a-\ud86c][\udc00-\udfff]|\ud86d[\udc00-\udf34\udf40-\udfff]|\ud86e[\udc00-\udc1d])+)/gi;
+    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/school\/[%\p{L}0-9-]+\/?/iu;
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }
 exports.isValidSchoolLinkedInProfileUrl = isValidSchoolLinkedInProfileUrl;
 function extractCompanyLinkedInProfileName(linkedInProfileUrl = "") {
-    if (!isValidCompanyLinkedInProfileUrl(linkedInProfileUrl))
+    if (!isValidCompanyLinkedInProfileUrl(linkedInProfileUrl)) {
         return "";
+    }
     linkedInProfileUrl = (0, urls_1.addHttpsIfMissing)(linkedInProfileUrl);
     const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(company|school)\//gi;
     let linkedInProfile = linkedInProfileUrl.replace(regex, "");
@@ -35,8 +36,9 @@ function extractCompanyLinkedInProfileName(linkedInProfileUrl = "") {
 exports.extractCompanyLinkedInProfileName = extractCompanyLinkedInProfileName;
 function generateCanonicalCompanyLinkedInProfileUrl(linkedInProfileUrl, options = {}) {
     const linkedInProfileName = extractCompanyLinkedInProfileName(linkedInProfileUrl).toLowerCase();
-    if (!linkedInProfileName)
+    if (!linkedInProfileName) {
         return "";
+    }
     if (options.keepTld) {
         const extractedDomain = (0, generic_1.extractLinkedInSubdomain)(linkedInProfileUrl);
         const tld = extractedDomain ? extractedDomain : "www";
