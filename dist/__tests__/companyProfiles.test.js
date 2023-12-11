@@ -9,6 +9,7 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("http://www.linkedin.com/company/test")).toBeTruthy();
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("HTTP://WWW.LINKEDIN.COM/COMPANY/TEST")).toBeTruthy();
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("http://linkedin.com/school/test")).toBeTruthy();
+        expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("https://www.linkedin.com/company/%C3%A0-nous-la-lune-")).toBeTruthy();
     });
     it("invalid", () => {
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("linkedin.com/in/test")).toBeFalsy();

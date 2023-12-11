@@ -31,6 +31,10 @@ describe("isValidLinkedInProfileUrl", () => {
     ).toBeTruthy();
 
     expect(
+      isValidLinkedInProfileUrl("https://linkedin.com/in/à-nous-la-lune-")
+    ).toBeTruthy();
+
+    expect(
       isValidLinkedInProfileUrl("https://linkedin.com/pub/test/01/01", {
         numeric: true,
       })

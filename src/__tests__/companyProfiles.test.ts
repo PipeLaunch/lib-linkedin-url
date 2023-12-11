@@ -11,6 +11,31 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
       isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/test")
     ).toBeTruthy();
 
+    // https://www.linkedin.com/company/%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8/?originalSubdomain=cn
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://cn.linkedin.com/company/%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8"
+      )
+    ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/microsoft/about/"
+      )
+    ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/microsoft?feedView=all"
+      )
+    ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/microsoft/posts/?feedView=all"
+      )
+    ).toBeTruthy();
+
     expect(
       isValidCompanyLinkedInProfileUrl("http://linkedin.com/company/test")
     ).toBeTruthy();
@@ -30,6 +55,12 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     expect(
       isValidCompanyLinkedInProfileUrl("http://linkedin.com/school/test")
     ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/à-nous-la-lune-"
+      )
+    ).toBeTruthy();
   });
 
   it("invalid", () => {
@@ -44,6 +75,10 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     expect(
       isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/company/")
     ).toBeFalsy();
+
+    // expect(
+    //   isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/company/%")
+    // ).toBeFalsy();
 
     expect(
       isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/school/")
