@@ -61,6 +61,12 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
         "https://www.linkedin.com/company/à-nous-la-lune-"
       )
     ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/123456"
+      )
+    ).toBeTruthy();
   });
 
   it("invalid", () => {
@@ -216,6 +222,10 @@ describe("extractCompanyLinkedInProfileName", () => {
         "https://linkedin.com/company/test/10/1"
       )
     ).toEqual("test");
+
+    expect(
+      extractCompanyLinkedInProfileName("https://linkedin.com/company/123456")
+    ).toEqual("123456");
 
     expect(
       extractCompanyLinkedInProfileName("https://www.linkedin.com/company/")
