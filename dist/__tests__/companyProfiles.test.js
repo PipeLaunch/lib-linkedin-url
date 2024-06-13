@@ -15,6 +15,7 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("HTTP://WWW.LINKEDIN.COM/COMPANY/TEST")).toBeTruthy();
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("http://linkedin.com/school/test")).toBeTruthy();
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("https://www.linkedin.com/company/à-nous-la-lune-")).toBeTruthy();
+        expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("https://www.linkedin.com/company/123456")).toBeTruthy();
     });
     it("invalid", () => {
         expect((0, companyProfiles_1.isValidCompanyLinkedInProfileUrl)("linkedin.com/in/test")).toBeFalsy();
@@ -64,6 +65,7 @@ describe("extractCompanyLinkedInProfileName", () => {
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/TEST?test=1")).toEqual("TEST");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/test#home")).toEqual("test");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/test/10/1")).toEqual("test");
+        expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://linkedin.com/company/123456")).toEqual("123456");
         expect((0, companyProfiles_1.extractCompanyLinkedInProfileName)("https://www.linkedin.com/company/")).toEqual("");
     });
     it("invalid", () => {
