@@ -43,7 +43,7 @@
 
 ## Features
 
-- Supports multiple linkedIn URL formats (including the 'old' ones)
+- Supports multiple linkedIn URL formats (including the 'old' format)
 - Written in typescript
 - With unit tests
 - Zero dependencies
@@ -97,7 +97,7 @@ extractLinkedInProfileName("https://www.linkedin.com/in/user/"); // -> user
 extractLinkedInProfileName("https://linkedin.com/in/UserR?view=1"); // -> user
 ```
 
-### Validate LinkedIn profile URL
+### Validate Company LinkedIn profile URL
 
 ```js
 isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/test"); // -> true
@@ -106,7 +106,14 @@ isValidCompanyLinkedInProfileUrl("https://linkedin.com/school/test"); // -> true
 
 isValidCompanyLinkedInProfileUrl("linkedin.com/in/test"); // -> false (is a person profile)
 
+```
+
+### Validate Person LinkedIn profile URL
+
+```js
 isValidLinkedInProfileUrl("https://linkedin.com/in/test"); // -> true
+
+isValidLinkedInProfileUrl("https://linkedin.com/in/"); // -> false
 ```
 
 ### Extract Country Name and Country Name

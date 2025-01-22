@@ -17,6 +17,11 @@ export function isValidLinkedInProfileUrl(
 
   url = addHttpsIfMissing(url);
 
+  // Reject URLs that end with /in/ or /in
+  if (/^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(in\/?)?$/gi.test(url)) {
+    return false;
+  }
+
   const regexNonNumeric =
     /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/((in\/[^/]+\/?)|(mwlite\/|m\/)?in\/)/gi;
   const regexNumeric =

@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateCanonicalCompanyLinkedInProfileUrl = exports.extractCompanyLinkedInProfileName = exports.isValidSchoolLinkedInProfileUrl = exports.isValidCompanyLinkedInProfileUrl = void 0;
+exports.isValidCompanyLinkedInProfileUrl = isValidCompanyLinkedInProfileUrl;
+exports.isValidSchoolLinkedInProfileUrl = isValidSchoolLinkedInProfileUrl;
+exports.extractCompanyLinkedInProfileName = extractCompanyLinkedInProfileName;
+exports.generateCanonicalCompanyLinkedInProfileUrl = generateCanonicalCompanyLinkedInProfileUrl;
 const urls_1 = require("../utils/urls");
 const generic_1 = require("./generic");
 function isValidCompanyLinkedInProfileUrl(url) {
@@ -12,7 +15,6 @@ function isValidCompanyLinkedInProfileUrl(url) {
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }
-exports.isValidCompanyLinkedInProfileUrl = isValidCompanyLinkedInProfileUrl;
 function isValidSchoolLinkedInProfileUrl(url) {
     if (typeof url !== "string" || !url) {
         return false;
@@ -22,7 +24,6 @@ function isValidSchoolLinkedInProfileUrl(url) {
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }
-exports.isValidSchoolLinkedInProfileUrl = isValidSchoolLinkedInProfileUrl;
 function extractCompanyLinkedInProfileName(linkedInProfileUrl = "") {
     if (!isValidCompanyLinkedInProfileUrl(linkedInProfileUrl)) {
         return "";
@@ -33,7 +34,6 @@ function extractCompanyLinkedInProfileName(linkedInProfileUrl = "") {
     linkedInProfile = (0, urls_1.cleanUrl)(linkedInProfile);
     return linkedInProfile;
 }
-exports.extractCompanyLinkedInProfileName = extractCompanyLinkedInProfileName;
 function generateCanonicalCompanyLinkedInProfileUrl(linkedInProfileUrl, options = {}) {
     const linkedInProfileName = extractCompanyLinkedInProfileName(linkedInProfileUrl).toLowerCase();
     if (!linkedInProfileName) {
@@ -46,5 +46,4 @@ function generateCanonicalCompanyLinkedInProfileUrl(linkedInProfileUrl, options 
     }
     return `https://linkedin.com/company/${linkedInProfileName}`;
 }
-exports.generateCanonicalCompanyLinkedInProfileUrl = generateCanonicalCompanyLinkedInProfileUrl;
 //# sourceMappingURL=companyProfiles.js.map

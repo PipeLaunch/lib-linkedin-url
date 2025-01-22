@@ -4,4 +4,3 @@ export declare function extractCompanyLinkedInProfileName(linkedInProfileUrl?: s
 export declare function generateCanonicalCompanyLinkedInProfileUrl(linkedInProfileUrl: string, options?: {
     keepTld?: boolean;
 }): string;
-//# sourceMappingURL=companyProfiles.d.ts.map

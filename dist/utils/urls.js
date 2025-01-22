@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cleanUrl = exports.addHttpsIfMissing = void 0;
+exports.addHttpsIfMissing = addHttpsIfMissing;
+exports.cleanUrl = cleanUrl;
 function addHttpsIfMissing(url) {
     if (typeof url !== "string" || !url) {
         return "";
@@ -11,7 +12,6 @@ function addHttpsIfMissing(url) {
     }
     return `https://${url}`;
 }
-exports.addHttpsIfMissing = addHttpsIfMissing;
 /**
  * @description Cleans the url from any parameters, slashes and end #
  * @param url {string} url to clean
@@ -27,5 +27,4 @@ function cleanUrl(url) {
         .replace(/#.*$/, ""); // any end #
     return clean.toString();
 }
-exports.cleanUrl = cleanUrl;
 //# sourceMappingURL=urls.js.map

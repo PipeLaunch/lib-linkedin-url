@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateCanonicalLinkedInProfileUrl = exports.extractLinkedInProfileName = exports.isValidLinkedInProfileUrl = void 0;
+exports.isValidLinkedInProfileUrl = isValidLinkedInProfileUrl;
+exports.extractLinkedInProfileName = extractLinkedInProfileName;
+exports.generateCanonicalLinkedInProfileUrl = generateCanonicalLinkedInProfileUrl;
 const urls_1 = require("../utils/urls");
 const generic_1 = require("./generic");
 /**
@@ -14,13 +16,16 @@ function isValidLinkedInProfileUrl(url, options = {}) {
         return false;
     }
     url = (0, urls_1.addHttpsIfMissing)(url);
+    // Reject URLs that end with /in/ or /in
+    if (/^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(in\/?)?$/gi.test(url)) {
+        return false;
+    }
     const regexNonNumeric = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/((in\/[^/]+\/?)|(mwlite\/|m\/)?in\/)/gi;
     const regexNumeric = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/((in\/[^/]+\/?)|(pub\/[^/]+\/((\w|\d)+\/?){3})|(mwlite\/|m\/)?in\/)/gi;
     const regex = options.numeric ? regexNumeric : regexNonNumeric;
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }
-exports.isValidLinkedInProfileUrl = isValidLinkedInProfileUrl;
 /**
  * @description Extracts the name of the linkedin profile from the url
  * @param {String} linkedInProfileUrl
@@ -35,7 +40,6 @@ function extractLinkedInProfileName(linkedInProfileUrl) {
     linkedInProfile = (0, urls_1.cleanUrl)(linkedInProfile);
     return linkedInProfile;
 }
-exports.extractLinkedInProfileName = extractLinkedInProfileName;
 function generateCanonicalLinkedInProfileUrl(linkedInProfileUrl, options = {}) {
     const linkedInProfileName = extractLinkedInProfileName(linkedInProfileUrl).toLowerCase();
     if (!linkedInProfileName)
@@ -47,5 +51,4 @@ function generateCanonicalLinkedInProfileUrl(linkedInProfileUrl, options = {}) {
     }
     return `https://linkedin.com/in/${linkedInProfileName}`;
 }
-exports.generateCanonicalLinkedInProfileUrl = generateCanonicalLinkedInProfileUrl;
 //# sourceMappingURL=personProfiles.js.map

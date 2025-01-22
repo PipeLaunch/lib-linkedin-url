@@ -48,6 +48,16 @@ describe("isValidLinkedInProfileUrl", () => {
 
     expect(isValidLinkedInProfileUrl("linkedin.com/company/test")).toBeFalsy();
 
+    expect(
+      isValidLinkedInProfileUrl("https://www.linkedin.com/in")
+    ).toBeFalsy();
+
+    expect(
+      isValidLinkedInProfileUrl("https://nl.linkedin.com/in/")
+    ).toBeFalsy();
+
+    expect(isValidLinkedInProfileUrl("https://linkedin.com/in/")).toBeFalsy();
+
     expect(isValidLinkedInProfileUrl("www.test.com/in/test")).toBeFalsy();
   });
 });

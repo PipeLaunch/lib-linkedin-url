@@ -16,4 +16,3 @@ export declare function extractLinkedInProfileName(linkedInProfileUrl: string): 
 export declare function generateCanonicalLinkedInProfileUrl(linkedInProfileUrl: string, options?: {
     keepTld?: boolean;
 }): string;
-//# sourceMappingURL=personProfiles.d.ts.map

@@ -5,4 +5,3 @@ export declare function addHttpsIfMissing(url: string): string;
  * @returns {string} cleaned url
  */
 export declare function cleanUrl(url: string): string;
-//# sourceMappingURL=urls.d.ts.map

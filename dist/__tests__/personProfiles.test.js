@@ -20,6 +20,9 @@ describe("isValidLinkedInProfileUrl", () => {
     it("invalid", () => {
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://https://linkedin.com/in/test")).toBeFalsy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("linkedin.com/company/test")).toBeFalsy();
+        expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://www.linkedin.com/in")).toBeFalsy();
+        expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://nl.linkedin.com/in/")).toBeFalsy();
+        expect((0, personProfiles_1.isValidLinkedInProfileUrl)("https://linkedin.com/in/")).toBeFalsy();
         expect((0, personProfiles_1.isValidLinkedInProfileUrl)("www.test.com/in/test")).toBeFalsy();
     });
 });

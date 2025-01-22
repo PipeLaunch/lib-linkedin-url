@@ -11,4 +11,3 @@ export declare function extractLinkedInSubdomain(url: string): string;
  * @returns {string} country name in english
  */
 export declare function extractCountryName(url: string): string;
-//# sourceMappingURL=generic.d.ts.map
