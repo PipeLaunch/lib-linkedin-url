@@ -97,6 +97,21 @@ extractLinkedInProfileName("https://www.linkedin.com/in/user/"); // -> user
 extractLinkedInProfileName("https://linkedin.com/in/UserR?view=1"); // -> user
 ```
 
+### Get the canonical URL
+
+```js
+generateCanonicalCompanyLinkedInProfileUrl(
+  "https://de.linkedin.com/company/TEST?trk=1"
+); // -> https://linkedin.com/company/test
+
+generateCanonicalCompanyLinkedInProfileUrl(
+  "https://de.linkedin.com/company/TEST?trk=1",
+  { keepTld: true }
+); // -> https://de.linkedin.com/company/test
+
+generateCanonicalLinkedInProfileUrl("https://www.linkedin.com/in/User/"); // -> https://linkedin.com/in/user
+```
+
 ### Validate Company LinkedIn profile URL
 
 ```js
@@ -106,6 +121,9 @@ isValidCompanyLinkedInProfileUrl("https://linkedin.com/school/test"); // -> true
 
 isValidCompanyLinkedInProfileUrl("linkedin.com/in/test"); // -> false (is a person profile)
 
+isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/a-&-b"); // -> true
+
+isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/a<script>"); // -> false
 ```
 
 ### Validate Person LinkedIn profile URL

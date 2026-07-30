@@ -67,6 +67,35 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
         "https://www.linkedin.com/company/123456"
       )
     ).toBeTruthy();
+
+    // https://www.linkedin.com/company/schwarz-&-partner-finanzkonsulenten-ag/
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/schwarz-&-partner-finanzkonsulenten-ag/"
+      )
+    ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/a-&-b?trk=1"
+      )
+    ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/company/o'neil")
+    ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/acme_corp"
+      )
+    ).toBeTruthy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/acme.io"
+      )
+    ).toBeTruthy();
   });
 
   it("invalid", () => {
@@ -92,6 +121,25 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
 
     expect(
       isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/schol/test")
+    ).toBeFalsy();
+
+    // the whole slug has to be valid, not just its first characters
+    expect(
+      isValidCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/a<script>"
+      )
+    ).toBeFalsy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/company/a b c")
+    ).toBeFalsy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/company/test!")
+    ).toBeFalsy();
+
+    expect(
+      isValidCompanyLinkedInProfileUrl("https://www.linkedin.com/company/&&&&")
     ).toBeFalsy();
   });
 });
@@ -121,6 +169,12 @@ describe("isValidSchoolLinkedInProfileUrl", () => {
     expect(
       isValidSchoolLinkedInProfileUrl("http://linkedin.com/school/test")
     ).toBeTruthy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl(
+        "https://www.linkedin.com/school/king's-college-london/"
+      )
+    ).toBeTruthy();
   });
 
   it("invalid", () => {
@@ -134,6 +188,12 @@ describe("isValidSchoolLinkedInProfileUrl", () => {
 
     expect(
       isValidSchoolLinkedInProfileUrl("https://www.linkedin.com/schol/test")
+    ).toBeFalsy();
+
+    expect(
+      isValidSchoolLinkedInProfileUrl(
+        "https://www.linkedin.com/school/a<script>"
+      )
     ).toBeFalsy();
   });
 });
@@ -159,6 +219,14 @@ describe("generateCanonicalCompanyLinkedInProfileUrl", () => {
         "https://linkedin.com/company/test?test=1"
       )
     ).toEqual(url);
+
+    expect(
+      generateCanonicalCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/Schwarz-&-Partner-Finanzkonsulenten-AG/"
+      )
+    ).toEqual(
+      "https://linkedin.com/company/schwarz-&-partner-finanzkonsulenten-ag"
+    );
   });
 
   it("with tld", () => {
@@ -228,6 +296,12 @@ describe("extractCompanyLinkedInProfileName", () => {
     ).toEqual("123456");
 
     expect(
+      extractCompanyLinkedInProfileName(
+        "https://www.linkedin.com/company/schwarz-&-partner-finanzkonsulenten-ag/"
+      )
+    ).toEqual("schwarz-&-partner-finanzkonsulenten-ag");
+
+    expect(
       extractCompanyLinkedInProfileName("https://www.linkedin.com/company/")
     ).toEqual("");
   });
@@ -247,6 +321,12 @@ describe("extractCompanyLinkedInProfileName", () => {
 
     expect(
       extractCompanyLinkedInProfileName("https://www.linkedin.com/company//")
+    ).toEqual("");
+
+    expect(
+      extractCompanyLinkedInProfileName(
+        "https://www.linkedin.com/company/a<script>"
+      )
     ).toEqual("");
   });
 });

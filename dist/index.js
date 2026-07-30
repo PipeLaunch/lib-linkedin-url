@@ -1,11 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractLinkedInSubdomain = exports.extractCountryName = exports.isValidSchoolLinkedInProfileUrl = exports.isValidCompanyLinkedInProfileUrl = exports.extractCompanyLinkedInProfileName = exports.isValidLinkedInProfileUrl = exports.extractLinkedInProfileName = void 0;
+exports.extractLinkedInSubdomain = exports.extractCountryName = exports.isValidSchoolLinkedInProfileUrl = exports.isValidCompanyLinkedInProfileUrl = exports.generateCanonicalCompanyLinkedInProfileUrl = exports.extractCompanyLinkedInProfileName = exports.isValidLinkedInProfileUrl = exports.generateCanonicalLinkedInProfileUrl = exports.extractLinkedInProfileName = void 0;
 var personProfiles_1 = require("./core/personProfiles");
 Object.defineProperty(exports, "extractLinkedInProfileName", { enumerable: true, get: function () { return personProfiles_1.extractLinkedInProfileName; } });
+Object.defineProperty(exports, "generateCanonicalLinkedInProfileUrl", { enumerable: true, get: function () { return personProfiles_1.generateCanonicalLinkedInProfileUrl; } });
 Object.defineProperty(exports, "isValidLinkedInProfileUrl", { enumerable: true, get: function () { return personProfiles_1.isValidLinkedInProfileUrl; } });
 var companyProfiles_1 = require("./core/companyProfiles");
 Object.defineProperty(exports, "extractCompanyLinkedInProfileName", { enumerable: true, get: function () { return companyProfiles_1.extractCompanyLinkedInProfileName; } });
+Object.defineProperty(exports, "generateCanonicalCompanyLinkedInProfileUrl", { enumerable: true, get: function () { return companyProfiles_1.generateCanonicalCompanyLinkedInProfileUrl; } });
 Object.defineProperty(exports, "isValidCompanyLinkedInProfileUrl", { enumerable: true, get: function () { return companyProfiles_1.isValidCompanyLinkedInProfileUrl; } });
 Object.defineProperty(exports, "isValidSchoolLinkedInProfileUrl", { enumerable: true, get: function () { return companyProfiles_1.isValidSchoolLinkedInProfileUrl; } });
 var generic_1 = require("./core/generic");

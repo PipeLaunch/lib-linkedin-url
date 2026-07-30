@@ -11,7 +11,10 @@ function isValidCompanyLinkedInProfileUrl(url) {
         return false;
     }
     url = (0, urls_1.addHttpsIfMissing)(url);
-    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(company|school)\/[%\p{L}0-9-]+\/?/giu;
+    // the slug is anchored with a lookahead so that it has to be matched in full:
+    // it can only be followed by a path, a query string or a hash. It also has to
+    // start with an alphanumeric (or an escape), never with punctuation
+    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(company|school)\/[%\p{L}0-9][%\p{L}0-9&'._-]*(?=[/?#]|$)/iu;
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }
@@ -20,7 +23,7 @@ function isValidSchoolLinkedInProfileUrl(url) {
         return false;
     }
     url = (0, urls_1.addHttpsIfMissing)(url);
-    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/school\/[%\p{L}0-9-]+\/?/iu;
+    const regex = /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/school\/[%\p{L}0-9][%\p{L}0-9&'._-]*(?=[/?#]|$)/iu;
     const validLinkedInProfileUrl = url.match(regex) !== null;
     return validLinkedInProfileUrl;
 }
