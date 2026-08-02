@@ -54,7 +54,7 @@
     "test": "node --test \"src/**/*.test.ts\"",
     "test:watch": "node --test --watch \"src/**/*.test.ts\"",
     "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-coverage-exclude=\"src/__tests__/**\" \"src/**/*.test.ts\"",
-    "prepublishOnly": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run lint:package"
+    "prepublishOnly": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && publint"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
