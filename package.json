@@ -15,7 +15,7 @@
     "typescript"
   ],
   "license": "MIT",
-  "author": "Sam Carreira <sam@pipelaunch.com>",
+  "author": "Sam <samuel@pipelaunch.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PipeLaunch/lib-linkedin-url.git"
