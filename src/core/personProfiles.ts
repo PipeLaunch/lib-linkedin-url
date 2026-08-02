@@ -1,73 +1,74 @@
-import { addHttpsIfMissing, cleanUrl } from "../utils/urls";
-import { extractLinkedInSubdomain } from "./generic";
+import {
+  canonicalEntityUrl,
+  canonicalPubUrl,
+  matchEntityUrl,
+  matchPubUrl,
+} from "../internal/entity.ts";
+import type {
+  CanonicalPersonProfileUrlOptions,
+  PersonProfileUrlOptions,
+} from "../types.ts";
 
 /**
- * @description validate linkedin profile url
- * @param url linkedin url
- * @param numeric enable to validate also profiles like http://nl.linkedin.com/pub/other-name/11/223/544
- * @returns {Boolean} true if url is a valid linkedin url
+ * Validates a LinkedIn person profile URL (`/in/<slug>`, including the
+ * mobile `/m/in/` and `/mwlite/in/` variants).
+ *
+ * @param url - LinkedIn profile URL, with or without protocol
+ * @param options - set `numeric: true` to also accept the legacy `/pub/<name>/<id>/<id>/<id>` format
+ * @returns `true` when the URL is a valid LinkedIn person profile URL
+ * @example
+ * isValidLinkedInProfileUrl("https://linkedin.com/in/williamhgates"); // true
+ * isValidLinkedInProfileUrl("linkedin.com/in/williamhgates"); // true
+ * isValidLinkedInProfileUrl("https://linkedin.com/in/"); // false (no slug)
+ * isValidLinkedInProfileUrl("http://nl.linkedin.com/pub/other-name/11/223/544", { numeric: true }); // true
  */
 export function isValidLinkedInProfileUrl(
   url: string,
-  options: { numeric?: boolean } = {}
+  options: PersonProfileUrlOptions = {},
 ): boolean {
-  if (typeof url !== "string" || !url) {
-    return false;
-  }
-
-  url = addHttpsIfMissing(url);
-
-  // Reject URLs that end with /in/ or /in
-  if (/^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(in\/?)?$/gi.test(url)) {
-    return false;
-  }
-
-  const regexNonNumeric =
-    /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/((in\/[^/]+\/?)|(mwlite\/|m\/)?in\/)/gi;
-  const regexNumeric =
-    /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/((in\/[^/]+\/?)|(pub\/[^/]+\/((\w|\d)+\/?){3})|(mwlite\/|m\/)?in\/)/gi;
-
-  const regex = options.numeric ? regexNumeric : regexNonNumeric;
-  const validLinkedInProfileUrl = url.match(regex) !== null;
-
-  return validLinkedInProfileUrl;
+  if (matchEntityUrl(url, "person") !== null) return true;
+  return options.numeric === true && matchPubUrl(url) !== null;
 }
 
 /**
- * @description Extracts the name of the linkedin profile from the url
- * @param {String} linkedInProfileUrl
- * @returns {String} linkedin profile name
+ * Extracts the profile slug from a LinkedIn person profile URL.
+ * The slug is returned exactly as written in the URL (case preserved);
+ * only {@link generateCanonicalLinkedInProfileUrl} lowercases.
+ *
+ * @param url - LinkedIn profile URL, with or without protocol
+ * @param options - set `numeric: true` to also extract the name from the legacy `/pub/` format
+ * @returns the profile slug, or `""` when the URL is invalid
+ * @example
+ * extractLinkedInProfileName("https://linkedin.com/in/UserR?view=1"); // "UserR"
+ * extractLinkedInProfileName("https://linkedin.com/company/test"); // ""
  */
-export function extractLinkedInProfileName(linkedInProfileUrl: string) {
-  if (!isValidLinkedInProfileUrl(linkedInProfileUrl, { numeric: false }))
-    return "";
-
-  linkedInProfileUrl = addHttpsIfMissing(linkedInProfileUrl);
-
-  const regex =
-    /^https?:\/\/((www|\w\w)\.)?linkedin\.com\/(in|m\/in|mwlite\/in)\//gi;
-
-  let linkedInProfile = linkedInProfileUrl.replace(regex, "");
-  linkedInProfile = cleanUrl(linkedInProfile);
-
-  return linkedInProfile;
+export function extractLinkedInProfileName(
+  url: string,
+  options: PersonProfileUrlOptions = {},
+): string {
+  const match = matchEntityUrl(url, "person");
+  if (match) return match.slug;
+  if (options.numeric === true) return matchPubUrl(url)?.name ?? "";
+  return "";
 }
 
+/**
+ * Builds the canonical URL of a LinkedIn person profile:
+ * `https://linkedin.com/in/<slug>` with a lowercased slug.
+ *
+ * @param url - LinkedIn profile URL, with or without protocol
+ * @param options - `keepTld` keeps the country subdomain (`www` when there is none);
+ *   `numeric: true` also canonicalizes legacy `/pub/` URLs
+ * @returns the canonical profile URL, or `""` when the URL is invalid
+ * @example
+ * generateCanonicalLinkedInProfileUrl("de.linkedin.com/in/TEST"); // "https://linkedin.com/in/test"
+ * generateCanonicalLinkedInProfileUrl("de.linkedin.com/in/TEST", { keepTld: true }); // "https://de.linkedin.com/in/test"
+ */
 export function generateCanonicalLinkedInProfileUrl(
-  linkedInProfileUrl: string,
-  options: { keepTld?: boolean } = {}
+  url: string,
+  options: CanonicalPersonProfileUrlOptions = {},
 ): string {
-  const linkedInProfileName =
-    extractLinkedInProfileName(linkedInProfileUrl).toLowerCase();
-
-  if (!linkedInProfileName) return "";
-
-  if (options.keepTld) {
-    const extractedDomain = extractLinkedInSubdomain(linkedInProfileUrl);
-    const tld = extractedDomain ? extractedDomain : "www";
-
-    return `https://${tld}.linkedin.com/in/${linkedInProfileName}`;
-  }
-
-  return `https://linkedin.com/in/${linkedInProfileName}`;
+  const canonical = canonicalEntityUrl(url, "person", options);
+  if (canonical) return canonical;
+  return options.numeric === true ? canonicalPubUrl(url, options) : "";
 }

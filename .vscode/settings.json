@@ -9,5 +9,6 @@
     "**/.localdevserver": true,
     "**/node_modules": true
   },
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

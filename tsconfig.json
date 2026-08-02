@@ -1,15 +1,23 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
-    "declaration": true,
-    "removeComments": false,
-    "resolveJsonModule": true,
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "@src/*": ["./src/*"]
-    }
+    "target": "es2023",
+    "lib": ["es2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "noEmit": true
   },
-  "include": ["src/**/*", "src/types"],
-  "extends": "@tsconfig/node22/tsconfig.json"
+  "include": ["src/**/*", "tsup.config.mts"]
 }

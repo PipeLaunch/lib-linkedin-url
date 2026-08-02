@@ -1,151 +1,213 @@
-<br />
-<div align="center">
-  <pre>
-    <br />
-      <h1>Linkedin URL</h1>
-  </pre>
-    <br />
-    <code><a href="https://github.com/PipeLaunch/lib-linkedin-url/network/members"
-      ><img
-        src="https://img.shields.io/github/forks/PipeLaunch/lib-linkedin-url?logo=github&label=Forks"
-        target="_blank"
-        alt="Forks" /></a
-  ></code>
-    <code><a href="https://github.com/PipeLaunch/lib-linkedin-url/issues"
-      ><img
-        src="https://img.shields.io/github/issues/PipeLaunch/lib-linkedin-url?logo=github&label=Issues"
-        target="_blank"
-        alt="Issues" /></a
-  ></code>
-    <code><a href="https://github.com/PipeLaunch/lib-linkedin-url/stargazers"
-      ><img
-        src="https://img.shields.io/github/stars/PipeLaunch/lib-linkedin-url?logo=github&label=Stars"
-        target="_blank"
-        alt="Stars" /></a
-  ></code>
-    <code><a href="https://github.com/PipeLaunch/lib-linkedin-url/blob/main/LICENSE"
-      ><img
-        src="https://img.shields.io/github/license/PipeLaunch/lib-linkedin-url?logo=githu&label=License"
-        target="_blank"
-        alt="License" /></a
-  ></code>
-    <code><a href="https://www.npmjs.com/package/lib-linkedin-url"
-      ><img
-        src="https://img.shields.io/npm/v/lib-linkedin-url?logo=npm&label=Npm"
-        target="_blank"
-        alt="Npm" /></a
-  ></code>
-</div>
+# lib-linkedin-url
 
-<br />
+[![npm version](https://img.shields.io/npm/v/lib-linkedin-url?logo=npm&label=npm)](https://www.npmjs.com/package/lib-linkedin-url)
+[![CI](https://github.com/PipeLaunch/lib-linkedin-url/actions/workflows/ci.yml/badge.svg)](https://github.com/PipeLaunch/lib-linkedin-url/actions/workflows/ci.yml)
+[![npm downloads](https://img.shields.io/npm/dm/lib-linkedin-url)](https://www.npmjs.com/package/lib-linkedin-url)
+[![license](https://img.shields.io/github/license/PipeLaunch/lib-linkedin-url?logo=github&label=License)](LICENSE)
 
-### Utility library to work with LinkedIn profile URLs: get the canonical url, validate, etc.
+Utility library to work with LinkedIn profile URLs: validate person, company and
+school URLs, extract profile slugs, build canonical URLs, and derive the country
+from regional subdomains.
 
 ## Features
 
-- Supports multiple linkedIn URL formats (including the 'old' format)
-- Written in typescript
-- With unit tests
-- Zero dependencies
+- Validates the URL formats LinkedIn actually uses, including the mobile
+  `/m/in/` and `/mwlite/in/` variants and the legacy numeric `/pub/` format
+- Handles URLs with or without protocol, uppercase hosts, query strings,
+  hashes and extra path segments
+- Unicode and percent-encoded slugs supported
+- Zero runtime dependencies
+- Dual ESM + CommonJS builds, TypeScript types included
+- Never throws: invalid input returns `false` or `""`
+
+## Requirements
+
+- Node.js >= 22, or any modern bundler / runtime (the built output is plain ES2023)
 
 ## Installation
 
 ```sh
-# Npm
 npm install lib-linkedin-url
-
-# Yarn
-yarn add lib-linkedin-url
+# pnpm add lib-linkedin-url
+# yarn add lib-linkedin-url
+# bun add lib-linkedin-url
 ```
 
-<br />
+## Usage
 
-## Common usage
-
-```js
+```ts
+// ESM / TypeScript
 import {
   extractCompanyLinkedInProfileName,
   isValidCompanyLinkedInProfileUrl,
 } from "lib-linkedin-url";
 
-console.log(
-  extractCompanyLinkedInProfileName(
-    "https://www.linkedin.com/company/pipelaunch/"
-  )
-);
-// -> pipelaunch
-
-console.log(
-  isValidCompanyLinkedInProfileUrl(
-    "https://www.linkedin.com/company/pipelaunch/"
-  )
+isValidCompanyLinkedInProfileUrl(
+  "https://www.linkedin.com/company/pipelaunch/",
 );
 // -> true
-```
 
-## Features
-
-### Extract the profile from a URL
-
-```js
 extractCompanyLinkedInProfileName(
-  "https://www.linkedin.com/company/pipelaunch/"
-); // -> pipelaunch
-
-extractLinkedInProfileName("https://www.linkedin.com/in/user/"); // -> user
-
-extractLinkedInProfileName("https://linkedin.com/in/UserR?view=1"); // -> user
+  "https://www.linkedin.com/company/pipelaunch/",
+);
+// -> "pipelaunch"
 ```
-
-### Get the canonical URL
 
 ```js
-generateCanonicalCompanyLinkedInProfileUrl(
-  "https://de.linkedin.com/company/TEST?trk=1"
-); // -> https://linkedin.com/company/test
+// CommonJS
+const { generateCanonicalLinkedInProfileUrl } = require("lib-linkedin-url");
 
-generateCanonicalCompanyLinkedInProfileUrl(
-  "https://de.linkedin.com/company/TEST?trk=1",
-  { keepTld: true }
-); // -> https://de.linkedin.com/company/test
-
-generateCanonicalLinkedInProfileUrl("https://www.linkedin.com/in/User/"); // -> https://linkedin.com/in/user
+generateCanonicalLinkedInProfileUrl("de.linkedin.com/in/UserName?trk=1");
+// -> "https://linkedin.com/in/username"
 ```
 
-### Validate Company LinkedIn profile URL
+## API
 
-```js
-isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/test"); // -> true
+Every function accepts URLs with or without an `http(s)://` protocol and never
+throws — invalid input (including non-strings) returns `false` or `""`.
 
-isValidCompanyLinkedInProfileUrl("https://linkedin.com/school/test"); // -> true, school is a "company"
+| Function                                                    | Returns   | Description                                                                                    |
+| ----------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| `isValidLinkedInProfileUrl(url, options?)`                  | `boolean` | Validates a person profile URL (`/in/<slug>`). `{ numeric: true }` also accepts legacy `/pub/` |
+| `extractLinkedInProfileName(url, options?)`                 | `string`  | Person slug, case preserved. `""` when invalid                                                 |
+| `generateCanonicalLinkedInProfileUrl(url, options?)`        | `string`  | `https://linkedin.com/in/<slug>`, lowercased. `""` when invalid                                |
+| `isValidCompanyLinkedInProfileUrl(url)`                     | `boolean` | Validates `/company/<slug>` (also accepts `/school/`)                                          |
+| `isValidSchoolLinkedInProfileUrl(url)`                      | `boolean` | Validates `/school/<slug>` only                                                                |
+| `extractCompanyLinkedInProfileName(url)`                    | `string`  | Company or school slug, case preserved. `""` when invalid                                      |
+| `generateCanonicalCompanyLinkedInProfileUrl(url, options?)` | `string`  | Canonical company URL; school URLs keep their `/school/` segment                               |
+| `generateCanonicalSchoolLinkedInProfileUrl(url, options?)`  | `string`  | Canonical school URL. `""` for non-school URLs                                                 |
+| `extractLinkedInSubdomain(url)`                             | `string`  | 2-letter country subdomain: `de.linkedin.com` -> `"de"`. `""` for none/`www`                   |
+| `extractCountryName(url)`                                   | `string`  | English country name from the subdomain: `"Germany"`. `""` when unknown                        |
 
-isValidCompanyLinkedInProfileUrl("linkedin.com/in/test"); // -> false (is a person profile)
+Exported option types: `CanonicalProfileUrlOptions` (`{ keepTld?: boolean }`),
+`PersonProfileUrlOptions` (`{ numeric?: boolean }`), and
+`CanonicalPersonProfileUrlOptions` (both combined).
 
-isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/a-&-b"); // -> true
-
-isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/a<script>"); // -> false
-```
-
-### Validate Person LinkedIn profile URL
+### Person profiles
 
 ```js
 isValidLinkedInProfileUrl("https://linkedin.com/in/test"); // -> true
+isValidLinkedInProfileUrl("linkedin.com/in/test"); // -> true (protocol optional)
+isValidLinkedInProfileUrl("https://linkedin.com/in/"); // -> false (no slug)
+isValidLinkedInProfileUrl("https://linkedin.com/in/a b c"); // -> false (invalid characters)
 
-isValidLinkedInProfileUrl("https://linkedin.com/in/"); // -> false
+// extraction preserves case ...
+extractLinkedInProfileName("https://linkedin.com/in/UserR?view=1"); // -> "UserR"
+
+// ... canonicalization lowercases
+generateCanonicalLinkedInProfileUrl("https://www.linkedin.com/in/UserR?view=1");
+// -> "https://linkedin.com/in/userr"
+
+// keep the country subdomain
+generateCanonicalLinkedInProfileUrl("http://de.linkedin.com/in/Test", {
+  keepTld: true,
+});
+// -> "https://de.linkedin.com/in/test"
+
+// legacy numeric format (dead on linkedin.com, still found in old datasets)
+isValidLinkedInProfileUrl("http://nl.linkedin.com/pub/other-name/11/223/544", {
+  numeric: true,
+});
+// -> true
+extractLinkedInProfileName("http://nl.linkedin.com/pub/other-name/11/223/544", {
+  numeric: true,
+});
+// -> "other-name"
 ```
 
-### Extract Country Name and Country Name
+### Companies and schools
 
 ```js
-extractLinkedInSubdomain("https://de.linkedin.com/company/test"); // -> de
+isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/test"); // -> true
+isValidCompanyLinkedInProfileUrl("https://linkedin.com/school/test"); // -> true (schools count as companies)
+isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/a-&-b"); // -> true
+isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/a<script>"); // -> false
 
-extractCountryName("https://de.linkedin.com/company/test"); // -> Germany
+isValidSchoolLinkedInProfileUrl("https://linkedin.com/school/mit"); // -> true
+isValidSchoolLinkedInProfileUrl("https://linkedin.com/company/test"); // -> false
+
+extractCompanyLinkedInProfileName(
+  "https://www.linkedin.com/company/microsoft/about/",
+);
+// -> "microsoft"
+
+generateCanonicalCompanyLinkedInProfileUrl(
+  "https://de.linkedin.com/company/TEST?trk=1",
+);
+// -> "https://linkedin.com/company/test"
+
+generateCanonicalCompanyLinkedInProfileUrl(
+  "https://de.linkedin.com/company/TEST?trk=1",
+  { keepTld: true },
+);
+// -> "https://de.linkedin.com/company/test"
+
+// school URLs keep their /school/ path segment
+generateCanonicalCompanyLinkedInProfileUrl(
+  "https://www.linkedin.com/school/MIT",
+);
+// -> "https://linkedin.com/school/mit"
+
+generateCanonicalSchoolLinkedInProfileUrl("linkedin.com/school/MIT/people/");
+// -> "https://linkedin.com/school/mit"
 ```
+
+### Subdomain and country
+
+```js
+extractLinkedInSubdomain("https://de.linkedin.com/company/test"); // -> "de"
+extractLinkedInSubdomain("https://www.linkedin.com/company/test"); // -> ""
+
+extractCountryName("https://de.linkedin.com/company/test"); // -> "Germany"
+extractCountryName("https://www.linkedin.com/company/test"); // -> ""
+```
+
+## Known limitations
+
+- Validation is character-set based, not existence based: a "valid" URL is
+  well-formed, but the library never contacts LinkedIn to check that the
+  profile exists.
+- Percent-encoded and unicode forms of the same slug are treated as two
+  distinct slugs — no decoding or normalization is performed.
+- The legacy `/pub/<name>/<id>/<id>/<id>` format is only recognized when
+  explicitly enabled with `{ numeric: true }`; those URLs no longer exist on
+  linkedin.com and are useful only for parsing old datasets.
+- The `?locale=` query parameter is not (yet) used for country detection; only
+  the regional subdomain is.
+
+## Migrating from 1.x
+
+v2.0.0 is a major release. What changed:
+
+- **Node.js >= 22 required** (was `>= 18`; Node 18 and 20 are end-of-life).
+- The package ships **dual ESM + CJS** with an `exports` map. Deep imports such
+  as `lib-linkedin-url/dist/...` no longer resolve — import everything from the
+  package root.
+- **Stricter validation** (previously these were accepted): person slugs are
+  now character-validated like company slugs (`/in/a b`, `/in/a<script>` are
+  invalid), empty slugs (`/in/`, `/mwlite/in/`) are invalid, `%` must form a
+  valid `%XX` escape, and legacy `/pub/` URLs need exactly three id segments.
+- **Fixed subdomain handling**: `extractLinkedInSubdomain`,
+  `extractCountryName` and `keepTld` now work for `http://` and protocol-less
+  URLs (a regex typo made them silently return `""`/`www` before).
+- **School canonicalization fixed**:
+  `generateCanonicalCompanyLinkedInProfileUrl("…/school/mit")` now returns
+  `…/school/mit` instead of rewriting it to a different entity's
+  `…/company/mit` URL.
+- **New**: `generateCanonicalSchoolLinkedInProfileUrl()`, exported option
+  types, and `{ numeric: true }` support in `extractLinkedInProfileName()` /
+  `generateCanonicalLinkedInProfileUrl()`.
+
+## Contributing
+
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md)
+for the development setup, and the [changelog](CHANGELOG.md) for release
+history.
 
 ## References
 
-- https://stackoverflow.com/questions/8450403/how-to-validate-a-linkedin-public-profile-url
+- [How to validate a LinkedIn public profile URL (Stack Overflow)](https://stackoverflow.com/questions/8450403/how-to-validate-a-linkedin-public-profile-url)
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2022-2026 [PipeLaunch](https://pipelaunch.com)
