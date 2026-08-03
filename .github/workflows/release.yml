@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write # required for npm OIDC trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+      # trusted publishing needs npm >= 11.5.1; keep the runner on latest
+      - run: npm install -g npm@latest
+      - run: npm ci
+      # prepublishOnly runs the full gate (format, lint, typecheck, tests,
+      # build, publint) before anything is uploaded. Auth is via OIDC —
+      # no token, no OTP; provenance is attached automatically.
+      - run: npm publish

@@ -66,9 +66,12 @@ npm test
 ## Releasing (maintainers)
 
 1. Set the new `version` in `package.json` and date the entry in
-   `CHANGELOG.md`.
-2. `npm publish` — the `prepublishOnly` gate runs format check, lint,
-   typecheck, tests, build and package validation before anything is uploaded
-   (`npm adduser` first if needed; the 2FA code arrives by email).
-3. Merge to `main`, tag `v<version>`, push the tag and create a GitHub
-   release.
+   `CHANGELOG.md`; commit, push, and wait for CI to pass.
+2. Tag and push: `git tag v<version> && git push origin v<version>` — the
+   Release workflow publishes to npm via OIDC trusted publishing. The
+   `prepublishOnly` gate (format check, lint, typecheck, tests, build,
+   publint) runs before anything is uploaded, and provenance is attached
+   automatically.
+3. Merge to `main` and create a GitHub release from the tag.
+
+Manual fallback: `npm publish --otp=<2FA code>` runs the same gate locally.
