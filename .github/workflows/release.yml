@@ -25,15 +25,19 @@ jobs:
             echo "::error::Tag ${GITHUB_REF_NAME} points to a commit that is not on main — refusing to publish."
             exit 1
           fi
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
-          cache: npm
+          cache: pnpm
       # trusted publishing needs npm >= 11.5.1; keep the runner on latest
       - run: npm install -g npm@latest
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
       # prepublishOnly runs the full gate (format, lint, typecheck, tests,
       # build, publint) before anything is uploaded. Auth is via OIDC —
       # no token, no OTP; provenance is attached automatically.
+      # Publish itself stays on the npm CLI (bundled with Node 24, upgraded
+      # above): pnpm 12's support for npm's OIDC trusted publishing isn't
+      # confirmed in pnpm's official docs/changelog.
       - run: npm publish

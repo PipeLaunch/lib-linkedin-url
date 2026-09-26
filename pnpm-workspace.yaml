@@ -1,0 +1,3 @@
+allowBuilds:
+  # Downloads the platform-specific esbuild binary; required for tsup to build
+  esbuild: true
