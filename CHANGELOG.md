@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-10-14
+
+### Added
+
+- `isNumericCompanyLinkedInProfileUrl()`: detects company URLs that use a
+  numeric company ID instead of the vanity name
+
+### Fixed
+
+- Slugs may contain combining marks (`\p{M}`), so Devanagari, Thai and other
+  scripts with vowel signs, and decomposed accents, are accepted
+- Slugs may contain digits of any script (`\p{Nd}`), not only `0-9`
+- A URL pasted on top of a prefilled one
+  (`linkedin.com/company/www.linkedin.com/company/foo`) is now rejected;
+  previously it validated and extracted `www.linkedin.com` as the slug
+
 ## [2.0.0] - 2026-08-02
 
 ### Added
@@ -99,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
+[2.0.1]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/PipeLaunch/lib-linkedin-url/compare/1.2.0...v1.2.1

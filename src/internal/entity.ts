@@ -1,4 +1,10 @@
-import { COMPANY_RE, PERSON_RE, PUB_RE, SCHOOL_RE } from "./patterns.ts";
+import {
+  COMPANY_RE,
+  DUPLICATED_RE,
+  PERSON_RE,
+  PUB_RE,
+  SCHOOL_RE,
+} from "./patterns.ts";
 import {
   addHttpsIfMissing,
   extractSubdomain,
@@ -28,7 +34,7 @@ export function matchEntityUrl(
   url: string,
   kind: EntityKind,
 ): EntityMatch | null {
-  if (!isNonEmptyString(url)) return null;
+  if (!isNonEmptyString(url) || DUPLICATED_RE.test(url)) return null;
   const match = ENTITY_RE[kind].exec(addHttpsIfMissing(url));
   if (!match) return null;
   return {
@@ -46,7 +52,7 @@ export interface PubMatch {
 
 /** Matches a legacy numeric `/pub/<name>/<id>/<id>/<id>` profile URL. */
 export function matchPubUrl(url: string): PubMatch | null {
-  if (!isNonEmptyString(url)) return null;
+  if (!isNonEmptyString(url) || DUPLICATED_RE.test(url)) return null;
   const match = PUB_RE.exec(addHttpsIfMissing(url));
   if (!match) return null;
   return { name: match[1] ?? "", ids: match[2] ?? "" };

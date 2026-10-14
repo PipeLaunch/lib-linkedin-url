@@ -4,6 +4,7 @@ import {
   extractCompanyLinkedInProfileName,
   generateCanonicalCompanyLinkedInProfileUrl,
   generateCanonicalSchoolLinkedInProfileUrl,
+  isNumericCompanyLinkedInProfileUrl,
   isValidCompanyLinkedInProfileUrl,
   isValidSchoolLinkedInProfileUrl,
 } from "../index.ts";
@@ -21,10 +22,21 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     // the company validator historically accepts schools as well
     "http://linkedin.com/school/test",
     "https://www.linkedin.com/company/à-nous-la-lune-",
+    // combining marks: Devanagari vowel signs/virama, and a decomposed accent
+    "https://www.linkedin.com/company/हिन्दी-कंपनी",
+    "https://www.linkedin.com/company/à-nous",
+    // digits of any script
+    "https://www.linkedin.com/company/कंपनी-१२३",
+    // linkedin.com inside the query string is not a pasted duplicate
+    "https://www.linkedin.com/company/test?redirect=https://www.linkedin.com/feed/",
+    // a slug may contain "linkedin.com" without being a pasted duplicate
+    "https://www.linkedin.com/company/linkedin.com",
+    "https://www.linkedin.com/company/learn-linkedin.com/about/",
     "https://www.linkedin.com/company/123456",
     "https://www.linkedin.com/company/schwarz-&-partner-finanzkonsulenten-ag/",
     "https://www.linkedin.com/company/a-&-b?trk=1",
     "https://www.linkedin.com/company/o'neil",
+    "https://www.linkedin.com/company/love's-travel-stops/",
     "https://www.linkedin.com/company/acme_corp",
     "https://www.linkedin.com/company/acme.io",
     "https://cn.linkedin.com/company/%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8",
@@ -46,6 +58,12 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     "https://www.linkedin.com/company/a b c",
     "https://www.linkedin.com/company/test!",
     "https://www.linkedin.com/company/&&&&",
+    // regression: a URL pasted on top of a prefilled one
+    "https://www.linkedin.com/company/www.linkedin.com/company/foo",
+    "linkedin.com/company/linkedin.com/company/foo",
+    "https://www.linkedin.com/company/https://www.linkedin.com/company/foo",
+    // a combining mark cannot start a slug
+    "https://www.linkedin.com/company/̀abc",
     // regression: a % must be part of a valid %XX escape
     "https://www.linkedin.com/company/%",
     "https://www.linkedin.com/company/%%%%",
@@ -137,6 +155,10 @@ describe("generateCanonicalCompanyLinkedInProfileUrl", () => {
       "https://www.linkedin.com/company/Schwarz-&-Partner-Finanzkonsulenten-AG/",
       "https://linkedin.com/company/schwarz-&-partner-finanzkonsulenten-ag",
     ],
+    [
+      "https://www.linkedin.com/company/love's-travel-stops/",
+      "https://linkedin.com/company/love's-travel-stops",
+    ],
     // regression: school URLs keep their /school/ path segment
     ["https://www.linkedin.com/school/MIT", "https://linkedin.com/school/mit"],
     ["https://linkedin.com/in/test", ""],
@@ -207,4 +229,22 @@ describe("generateCanonicalSchoolLinkedInProfileUrl", () => {
       "https://de.linkedin.com/school/test",
     );
   });
+});
+
+describe("isNumericCompanyLinkedInProfileUrl", () => {
+  const cases: [url: string, expected: boolean][] = [
+    ["https://www.linkedin.com/company/1035", true],
+    ["linkedin.com/company/1035/about/", true],
+    ["https://www.linkedin.com/company/microsoft", false],
+    ["https://www.linkedin.com/company/3m-company", false],
+    // only ASCII digits form a LinkedIn company ID
+    ["https://www.linkedin.com/company/१२३", false],
+    ["https://www.linkedin.com/in/1035", false],
+    ["", false],
+  ];
+  for (const [url, expected] of cases) {
+    it(`${url} -> ${String(expected)}`, () => {
+      assert.equal(isNumericCompanyLinkedInProfileUrl(url), expected);
+    });
+  }
 });

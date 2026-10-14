@@ -46,6 +46,21 @@ export function extractCompanyLinkedInProfileName(url = ""): string {
 }
 
 /**
+ * Detects a company URL that uses LinkedIn's numeric company ID instead of
+ * the vanity name. Numeric IDs resolve on LinkedIn, but callers may want to
+ * warn about them or resolve the vanity name first.
+ *
+ * @param url - LinkedIn company or school URL, with or without protocol
+ * @returns `true` when the URL is valid and its slug is all digits
+ * @example
+ * isNumericCompanyLinkedInProfileUrl("https://www.linkedin.com/company/1035"); // true
+ * isNumericCompanyLinkedInProfileUrl("https://www.linkedin.com/company/microsoft"); // false
+ */
+export function isNumericCompanyLinkedInProfileUrl(url: string): boolean {
+  return /^[0-9]+$/.test(extractCompanyLinkedInProfileName(url));
+}
+
+/**
  * Builds the canonical URL of a LinkedIn company profile:
  * `https://linkedin.com/company/<slug>` with a lowercased slug.
  * School URLs keep their `/school/` path segment.
