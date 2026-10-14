@@ -69,3 +69,4 @@ dist/
 
 # private maintainer notes (local only)
 PUBLISHING.md
+.claude/state/*

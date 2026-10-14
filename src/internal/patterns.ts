@@ -13,15 +13,17 @@ const HOST_PREFIX = String.raw`^https?:\/\/(?:(?:www|[a-z]{2})\.)?linkedin\.com\
 const PCT = String.raw`%[0-9a-f]{2}`;
 
 /**
- * A profile slug: starts with a letter (any script), digit or percent-escape,
- * and may continue with those plus `&`, `'`, `.`, `_` and `-`.
+ * A profile slug: starts with a letter or digit (any script) or a percent-escape,
+ * and may continue with those plus combining marks (`\p{M}`: the vowel signs
+ * and viramas of Devanagari, Thai, ... and decomposed accents), `&`, `'`, `.`,
+ * `_` and `-`.
  *
  * LinkedIn's own vanity-URL rule is "3-100 letters or numbers, no spaces,
  * symbols, or special characters", but real slugs also carry unicode letters,
  * separator punctuation and percent-encoded UTF-8 bytes, so only the character
  * set is validated here, not the length.
  */
-const SLUG = String.raw`(?:${PCT}|[\p{L}0-9])(?:${PCT}|[\p{L}0-9&'._-])*`;
+const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|[\p{L}\p{M}\p{Nd}&'._-])*`;
 
 /** The slug must fill a whole path segment: only `/`, `?`, `#` or the end may follow it. */
 const AFTER_SLUG = String.raw`(?=[/?#]|$)`;
@@ -56,6 +58,16 @@ export const PUB_RE = new RegExp(
 
 /** Captures the 2-letter country subdomain: `https://de.linkedin.com[/...]` -> `de`. `www` never matches. */
 export const SUBDOMAIN_RE = /^https?:\/\/([a-z]{2})\.linkedin\.com(?=[/?#]|$)/i;
+
+/**
+ * Detects a URL pasted on top of a prefilled one, e.g.
+ * `linkedin.com/company/www.linkedin.com/company/foo`: a second
+ * `linkedin.com/<profile segment>/` in the path. A slug that merely contains
+ * `linkedin.com` (`/company/linkedin.com`) and a `linkedin.com/` inside the
+ * query string or fragment are fine.
+ */
+export const DUPLICATED_RE =
+  /^[^?#]*linkedin\.com\/[^?#]*linkedin\.com\/(?:m\/|mwlite\/)?(?:in|company|school|pub)\//i;
 
 /** Detects an existing `http(s)://` protocol prefix. */
 export const HAS_PROTOCOL_RE = /^https?:\/\//i;

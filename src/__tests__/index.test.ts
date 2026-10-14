@@ -11,6 +11,7 @@ const EXPORTED_FUNCTIONS = [
   "generateCanonicalCompanyLinkedInProfileUrl",
   "generateCanonicalLinkedInProfileUrl",
   "generateCanonicalSchoolLinkedInProfileUrl",
+  "isNumericCompanyLinkedInProfileUrl",
   "isValidCompanyLinkedInProfileUrl",
   "isValidLinkedInProfileUrl",
   "isValidSchoolLinkedInProfileUrl",
@@ -32,6 +33,7 @@ describe("non-string inputs never throw", () => {
   const inputs: unknown[] = [undefined, null, 42, {}, [], true];
 
   const validators = [
+    lib.isNumericCompanyLinkedInProfileUrl,
     lib.isValidLinkedInProfileUrl,
     lib.isValidCompanyLinkedInProfileUrl,
     lib.isValidSchoolLinkedInProfileUrl,

@@ -18,6 +18,7 @@ describe("isValidLinkedInProfileUrl", () => {
     "https://linkedin.com/mwlite/in/test",
     "https://linkedin.com/m/in/test",
     "https://linkedin.com/in/à-nous-la-lune-",
+    "https://linkedin.com/in/राहुल-शर्मा",
     "https://linkedin.com/in/test/10/1",
     "https://www.linkedin.com/in/test?trk=people-guest_people_search-card",
   ];
@@ -28,6 +29,8 @@ describe("isValidLinkedInProfileUrl", () => {
   }
 
   const invalid = [
+    // regression: a URL pasted on top of a prefilled one
+    "https://www.linkedin.com/in/www.linkedin.com/in/john-doe",
     "https://https://linkedin.com/in/test",
     "linkedin.com/company/test",
     "https://www.linkedin.com/in",

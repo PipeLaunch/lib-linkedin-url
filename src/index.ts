@@ -7,6 +7,7 @@ export {
   extractCompanyLinkedInProfileName,
   generateCanonicalCompanyLinkedInProfileUrl,
   generateCanonicalSchoolLinkedInProfileUrl,
+  isNumericCompanyLinkedInProfileUrl,
   isValidCompanyLinkedInProfileUrl,
   isValidSchoolLinkedInProfileUrl,
 } from "./core/companyProfiles.ts";

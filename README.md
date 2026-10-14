@@ -73,6 +73,7 @@ throws — invalid input (including non-strings) returns `false` or `""`.
 | `generateCanonicalLinkedInProfileUrl(url, options?)`        | `string`  | `https://linkedin.com/in/<slug>`, lowercased. `""` when invalid                                |
 | `isValidCompanyLinkedInProfileUrl(url)`                     | `boolean` | Validates `/company/<slug>` (also accepts `/school/`)                                          |
 | `isValidSchoolLinkedInProfileUrl(url)`                      | `boolean` | Validates `/school/<slug>` only                                                                |
+| `isNumericCompanyLinkedInProfileUrl(url)`                   | `boolean` | Valid company URL whose slug is a numeric company ID (`/company/1035`)                         |
 | `extractCompanyLinkedInProfileName(url)`                    | `string`  | Company or school slug, case preserved. `""` when invalid                                      |
 | `generateCanonicalCompanyLinkedInProfileUrl(url, options?)` | `string`  | Canonical company URL; school URLs keep their `/school/` segment                               |
 | `generateCanonicalSchoolLinkedInProfileUrl(url, options?)`  | `string`  | Canonical school URL. `""` for non-school URLs                                                 |
@@ -125,6 +126,9 @@ isValidCompanyLinkedInProfileUrl("https://linkedin.com/company/a<script>"); // -
 
 isValidSchoolLinkedInProfileUrl("https://linkedin.com/school/mit"); // -> true
 isValidSchoolLinkedInProfileUrl("https://linkedin.com/company/test"); // -> false
+
+isNumericCompanyLinkedInProfileUrl("https://linkedin.com/company/1035"); // -> true
+isNumericCompanyLinkedInProfileUrl("https://linkedin.com/company/microsoft"); // -> false
 
 extractCompanyLinkedInProfileName(
   "https://www.linkedin.com/company/microsoft/about/",
