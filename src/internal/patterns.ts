@@ -25,24 +25,33 @@ const PCT = String.raw`%[0-9a-f]{2}`;
  */
 const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|[\p{L}\p{M}\p{Nd}&'._-])*`;
 
+/**
+ * A person, company or school slug: like {@link SLUG}, but it may also contain
+ * `~` and may start with any run of `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`,
+ * `/in/jane~doe` are all live profiles). At least one letter, digit or
+ * percent-escape is still required, so `/in/-` or `/company/~` are rejected.
+ * The legacy `/pub/` format keeps the stricter {@link SLUG}.
+ */
+const PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|[\p{L}\p{M}\p{Nd}&'._~-])*`;
+
 /** The slug must fill a whole path segment: only `/`, `?`, `#` or the end may follow it. */
 const AFTER_SLUG = String.raw`(?=[/?#]|$)`;
 
 /** Person profiles: `/in/<slug>`, including the mobile `/m/in/` and `/mwlite/in/` variants. */
 export const PERSON_RE = new RegExp(
-  String.raw`${HOST_PREFIX}(?:mwlite\/|m\/)?(in)\/(${SLUG})${AFTER_SLUG}`,
+  String.raw`${HOST_PREFIX}(?:mwlite\/|m\/)?(in)\/(${PROFILE_SLUG})${AFTER_SLUG}`,
   "iu",
 );
 
 /** Companies: `/company/<slug>`. Also accepts `/school/` (long-standing behavior of the company validator). */
 export const COMPANY_RE = new RegExp(
-  String.raw`${HOST_PREFIX}(company|school)\/(${SLUG})${AFTER_SLUG}`,
+  String.raw`${HOST_PREFIX}(company|school)\/(${PROFILE_SLUG})${AFTER_SLUG}`,
   "iu",
 );
 
 /** Schools only: `/school/<slug>`. */
 export const SCHOOL_RE = new RegExp(
-  String.raw`${HOST_PREFIX}(school)\/(${SLUG})${AFTER_SLUG}`,
+  String.raw`${HOST_PREFIX}(school)\/(${PROFILE_SLUG})${AFTER_SLUG}`,
   "iu",
 );
 

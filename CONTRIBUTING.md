@@ -61,17 +61,22 @@ npm test
   intentionally unsupported.
 - LinkedIn's official vanity-slug rule is "3-100 letters or numbers", but real
   slugs also contain unicode letters, `&'._-` and percent-encoded UTF-8 bytes,
-  so validation is charset-only (no length check).
+  so validation is charset-only (no length check). Person, company and school
+  slugs also allow `~` and may start with `-` or `~` (`/in/-jane-doe-`,
+  `/in/jane~doe`, `/company/-acme-corp-`); legacy `/pub/` names do not.
 
 ## Releasing (maintainers)
 
-1. Set the new `version` in `package.json` and date the entry in
-   `CHANGELOG.md`; commit, push, and wait for CI to pass.
-2. Tag and push: `git tag v<version> && git push origin v<version>` — the
-   Release workflow publishes to npm via OIDC trusted publishing. The
-   `prepublishOnly` gate (format check, lint, typecheck, tests, build,
-   publint) runs before anything is uploaded, and provenance is attached
-   automatically.
-3. Merge to `main` and create a GitHub release from the tag.
+1. On a branch, set the new `version` in `package.json` and date the entry in
+   `CHANGELOG.md`; commit, push, open a PR and wait for CI to pass.
+2. Merge the PR to `main`.
+3. Tag the merge commit on `main` and push the tag:
+   `git checkout main && git pull && git tag v<version> && git push origin v<version>`.
+   The Release workflow refuses tags that are not on `main`. It publishes to
+   npm via OIDC trusted publishing after the `npm-publish` environment is
+   approved. The `prepublishOnly` gate (format check, lint, typecheck, tests,
+   build, publint) runs before anything is uploaded, and provenance is
+   attached automatically.
+4. Create a GitHub release from the tag.
 
 Manual fallback: `npm publish --otp=<2FA code>` runs the same gate locally.

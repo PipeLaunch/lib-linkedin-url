@@ -21,6 +21,13 @@ describe("isValidLinkedInProfileUrl", () => {
     "https://linkedin.com/in/राहुल-शर्मा",
     "https://linkedin.com/in/test/10/1",
     "https://www.linkedin.com/in/test?trk=people-guest_people_search-card",
+    // regression: live slugs that start with `-`/`~` or contain `~`
+    "https://www.linkedin.com/in/-janedoe/",
+    "https://www.linkedin.com/in/-jane-doe-/",
+    "https://www.linkedin.com/in/-jane-doe",
+    "https://www.linkedin.com/in/jane~doe/",
+    "https://www.linkedin.com/in/~janedoe/",
+    "https://www.linkedin.com/in/jane-doe-mba-fcca~cpa-pmp-psm-1a234567b/",
   ];
   for (const url of valid) {
     it(`accepts ${url}`, () => {
@@ -50,6 +57,11 @@ describe("isValidLinkedInProfileUrl", () => {
     "https://linkedin.com/in/%",
     "https://linkedin.com/in/test%",
     "https://linkedin.com/in/%GG",
+    // a slug of only `-`/`~` has no name in it
+    "https://linkedin.com/in/-",
+    "https://linkedin.com/in/~",
+    "https://linkedin.com/in/-~-",
+    "https://linkedin.com/in/-/test",
   ];
   for (const url of invalid) {
     it(`rejects ${url}`, () => {
@@ -100,6 +112,9 @@ describe("extractLinkedInProfileName", () => {
     ["https://linkedin.com/in/", ""],
     ["https://linkedin.com/in/?trk=x", ""],
     ["https://linkedin.com/in/a b c", ""],
+    ["https://www.linkedin.com/in/-Jane-Doe-/", "-Jane-Doe-"],
+    ["https://www.linkedin.com/in/jane~doe/", "jane~doe"],
+    ["https://www.linkedin.com/in/~janedoe", "~janedoe"],
   ];
   for (const [url, expected] of cases) {
     it(`${url} -> "${expected}"`, () => {
@@ -132,6 +147,11 @@ describe("generateCanonicalLinkedInProfileUrl", () => {
     ["https://linkedin.com/mwlite/in/TEST", "https://linkedin.com/in/test"],
     ["https://linkedin.com/company/test", ""],
     ["https://linkedin.com/in/", ""],
+    ["www.linkedin.com/in/-Jane-Doe-/", "https://linkedin.com/in/-jane-doe-"],
+    [
+      "https://www.linkedin.com/in/Jane~Doe/",
+      "https://linkedin.com/in/jane~doe",
+    ],
   ];
   for (const [url, expected] of cases) {
     it(`${url} -> "${expected}"`, () => {

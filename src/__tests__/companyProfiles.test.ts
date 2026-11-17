@@ -40,6 +40,12 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     "https://www.linkedin.com/company/acme_corp",
     "https://www.linkedin.com/company/acme.io",
     "https://cn.linkedin.com/company/%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8",
+    // slugs that start with `-`/`~` or contain `~`
+    "https://www.linkedin.com/company/-acme/",
+    "https://www.linkedin.com/company/-acme-corp-/",
+    "https://www.linkedin.com/company/~acme",
+    "https://www.linkedin.com/company/acme~corp/",
+    "https://www.linkedin.com/school/-example-university-/",
   ];
   for (const url of valid) {
     it(`accepts ${url}`, () => {
@@ -58,6 +64,11 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     "https://www.linkedin.com/company/a b c",
     "https://www.linkedin.com/company/test!",
     "https://www.linkedin.com/company/&&&&",
+    // a slug of only `-`/`~` has no name in it
+    "https://www.linkedin.com/company/-",
+    "https://www.linkedin.com/company/~",
+    "https://www.linkedin.com/company/-~-/",
+    "https://www.linkedin.com/school/~",
     // regression: a URL pasted on top of a prefilled one
     "https://www.linkedin.com/company/www.linkedin.com/company/foo",
     "linkedin.com/company/linkedin.com/company/foo",
@@ -85,6 +96,9 @@ describe("isValidSchoolLinkedInProfileUrl", () => {
     "http://www.linkedin.com/school/test",
     "HTTP://WWW.LINKEDIN.COM/school/TEST",
     "https://www.linkedin.com/school/king's-college-london/",
+    "https://www.linkedin.com/school/-example-university-/",
+    "https://www.linkedin.com/school/~example-college",
+    "https://www.linkedin.com/school/example~institute/",
   ];
   for (const url of valid) {
     it(`accepts ${url}`, () => {
@@ -100,6 +114,8 @@ describe("isValidSchoolLinkedInProfileUrl", () => {
     "https://www.linkedin.com/school/",
     "https://www.linkedin.com/schol/test",
     "https://www.linkedin.com/school/a<script>",
+    "https://www.linkedin.com/school/-",
+    "https://www.linkedin.com/school/~~",
   ];
   for (const url of invalid) {
     it(`rejects ${url}`, () => {
@@ -135,6 +151,10 @@ describe("extractCompanyLinkedInProfileName", () => {
     ["https://linkedin.com/in/test", ""],
     ["https://www.linkedin2com/company/test", ""],
     ["https://www.linkedin.com/company/a<script>", ""],
+    ["https://www.linkedin.com/company/-Acme-Corp-/", "-Acme-Corp-"],
+    ["https://www.linkedin.com/company/acme~corp/about/", "acme~corp"],
+    ["https://www.linkedin.com/school/~Example-College", "~Example-College"],
+    ["https://www.linkedin.com/company/-", ""],
   ];
   for (const [url, expected] of cases) {
     it(`${url} -> "${expected}"`, () => {
@@ -163,6 +183,14 @@ describe("generateCanonicalCompanyLinkedInProfileUrl", () => {
     ["https://www.linkedin.com/school/MIT", "https://linkedin.com/school/mit"],
     ["https://linkedin.com/in/test", ""],
     ["https://www.linkedin.com/company/", ""],
+    [
+      "https://www.linkedin.com/company/-Acme-Corp-/",
+      "https://linkedin.com/company/-acme-corp-",
+    ],
+    [
+      "www.linkedin.com/company/Acme~Corp",
+      "https://linkedin.com/company/acme~corp",
+    ],
   ];
   for (const [url, expected] of cases) {
     it(`${url} -> "${expected}"`, () => {
@@ -213,6 +241,14 @@ describe("generateCanonicalSchoolLinkedInProfileUrl", () => {
     // a company URL is not a school URL
     ["https://linkedin.com/company/test", ""],
     ["https://linkedin.com/school/", ""],
+    [
+      "https://www.linkedin.com/school/-Example-University-/",
+      "https://linkedin.com/school/-example-university-",
+    ],
+    [
+      "linkedin.com/school/Example~Institute",
+      "https://linkedin.com/school/example~institute",
+    ],
   ];
   for (const [url, expected] of cases) {
     it(`${url} -> "${expected}"`, () => {
@@ -239,6 +275,9 @@ describe("isNumericCompanyLinkedInProfileUrl", () => {
     ["https://www.linkedin.com/company/3m-company", false],
     // only ASCII digits form a LinkedIn company ID
     ["https://www.linkedin.com/company/१२३", false],
+    // a leading `-`/`~` makes it a vanity name, not an ID
+    ["https://www.linkedin.com/company/-1035", false],
+    ["https://www.linkedin.com/company/~1035", false],
     ["https://www.linkedin.com/in/1035", false],
     ["", false],
   ];
