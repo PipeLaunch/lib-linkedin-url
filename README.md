@@ -169,7 +169,7 @@ extractCountryName("https://www.linkedin.com/company/test"); // -> ""
 
 ## Slug normalization
 
-Since 2.1.0, raw and percent-encoded spellings of a slug give the same
+Since 3.0.0, raw and percent-encoded spellings of a slug give the same
 answer from every function for every character a slug may contain. The
 library returns the **decoded** form:
 
@@ -219,6 +219,27 @@ the same way, against their stricter character set (no `~`, no symbols), so
   linkedin.com and are useful only for parsing old datasets.
 - The `?locale=` query parameter is not (yet) used for country detection; only
   the regional subdomain is.
+
+## Migrating from 2.x
+
+v3.0.0 is a major release because returned values change. The function
+names, signatures and options are unchanged. What changed:
+
+- **Decoded slugs**: `extract*` and `generateCanonical*` return the decoded,
+  NFC-normalized slug (`%C3%A0-nous-la-lune-` -> `à-nous-la-lune-`,
+  `cafe%CC%81` -> `café`). Escapes that stay encoded use uppercase hex
+  (`%2F`, previously `%2f` in canonical URLs). If you stored values
+  returned by 2.x, re-run them through the same function to get the new form.
+- **New accepted URLs**: slugs with `©`, `®`, `°`, `℠` or `™` after the
+  first character (`/in/jane-doe-cfa®`).
+- **Newly rejected URLs**: a slug whose first character (after any `-`/`~`)
+  is an escape that decodes to a character that may not start a slug, or
+  that stays escaped (`/in/%C2%AE`, `/in/%2Ejane`, `/in/%20jane`); a raw
+  U+FE0E/U+FE0F; slugs longer than 2048 characters.
+- `isNumericCompanyLinkedInProfileUrl()` treats a percent-encoded numeric
+  ID (`/company/%31%30%33%35`) as numeric.
+
+The full list is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Migrating from 1.x
 
