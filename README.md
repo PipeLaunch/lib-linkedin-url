@@ -169,8 +169,8 @@ extractCountryName("https://www.linkedin.com/company/test"); // -> ""
 
 ## Slug normalization
 
-Raw and percent-encoded spellings of a slug give the same answer from every
-function. The library returns the **decoded** form:
+Since 2.1.0, raw and percent-encoded spellings of a slug give the same
+answer from every function. The library returns the **decoded** form:
 
 - an escape that decodes (as UTF-8) to a character allowed in a slug is
   decoded: `cima%C2%AE` -> `cima®`, `%E4%B8%AD` -> `中`;

@@ -5,7 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.3] - 2026-11-22
+## [2.1.0] - 2026-11-22
+
+Released as a minor version: `extract*` and `generateCanonical*` return a
+different string for some inputs (decoded slugs, uppercase escape hex), and a
+few previously valid URLs are now rejected. See **Changed** below before
+upgrading if you store or compare these values.
 
 ### Fixed
 
@@ -165,6 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
+[2.1.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v1.3.0...v2.0.0
