@@ -186,6 +186,21 @@ export function canonicalSlug(slug: string): string {
   return nfcOutsideEscapes(upperEscapes(slug.toLowerCase()));
 }
 
+/**
+ * Checks a normalized slug against {@link MAX_SLUG_LENGTH} after every
+ * transformation that can lengthen it. {@link normalizeSlug} only bounds the
+ * input, but NFC can expand a character (`̈́` -> `̈́`) and so
+ * can lowercasing (`İ` -> `i̇`). Requiring both the normalized slug and
+ * its canonical form to fit keeps the round trip intact: a canonical URL
+ * always passes the input limit again and normalizes to itself.
+ */
+function fitsLengthLimit(slug: string): boolean {
+  return (
+    slug.length <= MAX_SLUG_LENGTH &&
+    canonicalSlug(slug).length <= MAX_SLUG_LENGTH
+  );
+}
+
 /** Matches a LinkedIn profile URL of the given kind. Returns `null` when invalid. */
 export function matchEntityUrl(
   url: string,
@@ -197,7 +212,13 @@ export function matchEntityUrl(
   // Validate the normalized slug as well, so `/in/%C2%AE` and `/in/%20jane`
   // are rejected just like `/in/®` and `/in/ jane`.
   const slug = normalizeSlug(match[2] ?? "");
-  if (!PROFILE_SLUG_RE.test(slug) || !hasValidFirstUnit(slug)) return null;
+  if (
+    !PROFILE_SLUG_RE.test(slug) ||
+    !hasValidFirstUnit(slug) ||
+    !fitsLengthLimit(slug)
+  ) {
+    return null;
+  }
   return { segment: (match[1] ?? "").toLowerCase(), slug };
 }
 
@@ -216,7 +237,13 @@ export function matchPubUrl(url: string): PubMatch | null {
   // Re-check after decoding, so `/pub/%2Djane/...` and `/pub/%C2%AEjane/...`
   // are rejected like `/pub/-jane/...` and `/pub/®jane/...`.
   const name = normalizeSlug(match[1] ?? "", PUB_SLUG_CHAR_RE);
-  if (!PUB_SLUG_RE.test(name) || !hasValidFirstUnit(name)) return null;
+  if (
+    !PUB_SLUG_RE.test(name) ||
+    !hasValidFirstUnit(name) ||
+    !fitsLengthLimit(name)
+  ) {
+    return null;
+  }
   return { name, ids: match[2] ?? "" };
 }
 
