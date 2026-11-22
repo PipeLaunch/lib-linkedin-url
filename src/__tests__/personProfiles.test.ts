@@ -294,6 +294,22 @@ describe("unicode symbols and percent-encoding", () => {
       "jane%28doe%29",
       "https://linkedin.com/in/jane%28doe%29",
     ],
+    // one undecodable byte does not block decoding of its neighbours
+    [
+      "https://linkedin.com/in/jane%C2%AE%ff",
+      "jane®%FF",
+      "https://linkedin.com/in/jane®%FF",
+    ],
+    [
+      "https://linkedin.com/in/jane®%FF",
+      "jane®%FF",
+      "https://linkedin.com/in/jane®%FF",
+    ],
+    [
+      "https://linkedin.com/in/%FFjane%C2%AE",
+      "%FFjane®",
+      "https://linkedin.com/in/%FFjane®",
+    ],
     // not valid UTF-8: kept as is
     [
       "https://linkedin.com/in/jane%ff",
@@ -329,6 +345,14 @@ describe("unicode symbols and percent-encoding", () => {
     "https://linkedin.com/in/%C2%AE",
     "https://linkedin.com/in/-%C2%AE-",
     "https://linkedin.com/in/%E2%84%A2jane",
+    // an undecodable byte after the symbol does not hide it
+    "https://linkedin.com/in/%C2%AE%FF",
+    // escapes decoding to a character that may not start a slug
+    "https://linkedin.com/in/%2Ejane",
+    "https://linkedin.com/in/%5Fjane",
+    "https://linkedin.com/in/%26jane",
+    "https://linkedin.com/in/%27jane",
+    "https://linkedin.com/in/%CC%81jane",
     // ASCII symbols are still rejected
     "https://linkedin.com/in/jane<doe>",
     "https://linkedin.com/in/jane+doe",

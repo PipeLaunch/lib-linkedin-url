@@ -174,9 +174,13 @@ function. The library returns the **decoded** form:
 
 - an escape that decodes (as UTF-8) to a character allowed in a slug is
   decoded: `cima%C2%AE` -> `cima®`, `%E4%B8%AD` -> `中`;
-- any other escape (space, `/`, `?`, `<`, control characters, bytes that are
-  not valid UTF-8) is kept, written with **uppercase** hex: `jane%2fdoe` ->
-  `jane%2Fdoe`;
+- any other escape (space, `/`, `?`, `<`, control characters) is kept,
+  written with **uppercase** hex: `jane%2fdoe` -> `jane%2Fdoe`;
+- a byte that is not valid UTF-8 is kept escaped on its own, and the bytes
+  around it are still decoded: `jane%C2%AE%ff` -> `jane®%FF`;
+- validity is checked on the decoded slug, so an escape that decodes to a
+  character that may not start a slug (`%C2%AE`, `%2E`, `%5F`, ...) is rejected
+  in first position, exactly like the raw character;
 - `extract*` functions keep the case of letters; `generateCanonical*`
   functions lowercase letters but not the hex digits of kept escapes.
 

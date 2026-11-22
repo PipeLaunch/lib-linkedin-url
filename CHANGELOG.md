@@ -25,8 +25,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   decoded slug (`cima%C2%AE` -> `cima®`); escapes of characters that may not
   appear literally are kept with uppercase hex (`%2F`, previously `%2f` in
   canonical URLs). See "Slug normalization" in the README.
-- Consequently a slug whose escapes decode to a symbol in first position
-  (`/in/%C2%AE`, `/in/%E2%84%A2jane`) is now rejected, like its raw form.
+- Consequently a slug is now rejected, like its raw form, when its first
+  character after any leading `-`/`~` is an escape that decodes to a
+  character that may not start a slug. These URLs were valid in 2.0.2:
+  - a symbol: `/in/%C2%AE`, `/in/%E2%84%A2jane`;
+  - `.`, `_`, `&` or `'`: `/in/%2Ejane`, `/in/%5Fjane`, `/in/%26jane`,
+    `/in/%27jane`;
+  - a combining mark: `/in/%CC%81jane`.
+
+  The same applies to company and school slugs.
+
+- Bytes that are not valid UTF-8 stay escaped one by one and do not stop
+  their neighbours from decoding: `jane%C2%AE%FF` and `jane®%FF` both give
+  `jane®%FF`, and `/in/%C2%AE%FF` is rejected like `/in/®%FF`.
 - Legacy `/pub/` names (`{ numeric: true }`) get the same normalization
   against their own, unchanged character set: `/pub/caf%C3%A9/1/2/3` extracts
   `café`, and `canonicalPubUrl` keeps uppercase hex for escapes it does not

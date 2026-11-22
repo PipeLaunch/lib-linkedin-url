@@ -63,7 +63,8 @@ function percentEncode(char: string): string {
  *   decoded: `cima%C2%AE` -> `cima®`, `%E4%B8%AD` -> `中`;
  * - a decoded character that is not allowed literally (space, `/`, `?`, `<`,
  *   control characters, ...) stays escaped: `jane%20doe` -> `jane%20doe`;
- * - a run that is not valid UTF-8 stays as it is;
+ * - each byte that does not start a valid UTF-8 sequence stays escaped on its
+ *   own, without blocking the bytes around it: `jane%C2%AE%FF` -> `jane®%FF`;
  * - every escape that remains is written with uppercase hex digits.
  *
  * Everything outside escapes is returned unchanged (case preserved). The
@@ -73,19 +74,49 @@ export function normalizeSlug(
   slug: string,
   allowed: RegExp = PROFILE_SLUG_CHAR_RE,
 ): string {
-  return slug.replace(/(?:%[0-9a-f]{2})+/gi, (run) => {
-    let decoded: string;
-    try {
-      decoded = decodeURIComponent(run);
-    } catch {
-      return upperEscapes(run);
+  return slug.replace(/(?:%[0-9a-f]{2})+/gi, (run) =>
+    decodeEscapeRun(run, allowed),
+  );
+}
+
+/** Length of the UTF-8 sequence a lead byte starts, or 0 when it cannot start one. */
+function utf8SequenceLength(byte: number): number {
+  if (byte < 0x80) return 1;
+  if (byte >= 0xc2 && byte <= 0xdf) return 2;
+  if (byte >= 0xe0 && byte <= 0xef) return 3;
+  if (byte >= 0xf0 && byte <= 0xf4) return 4;
+  return 0;
+}
+
+/**
+ * Decodes a run of `%XX` escapes one UTF-8 sequence at a time. A sequence that
+ * is not valid (bad lead byte, missing or wrong continuation bytes, overlong
+ * form, surrogate) leaves only its lead byte escaped; decoding resumes at the
+ * next byte.
+ */
+function decodeEscapeRun(run: string, allowed: RegExp): string {
+  const escapes = run.match(/%[0-9a-f]{2}/gi) ?? [];
+  let out = "";
+  let i = 0;
+  while (i < escapes.length) {
+    const lead = escapes[i] ?? "";
+    const length = utf8SequenceLength(parseInt(lead.slice(1), 16));
+    if (length > 0 && i + length <= escapes.length) {
+      try {
+        // decodeURIComponent rejects overlong forms, surrogates and bad
+        // continuation bytes, so a successful decode is one valid code point.
+        const char = decodeURIComponent(escapes.slice(i, i + length).join(""));
+        out += allowed.test(char) ? char : percentEncode(char);
+        i += length;
+        continue;
+      } catch {
+        // not a valid sequence: fall through and keep the lead byte escaped
+      }
     }
-    let out = "";
-    for (const char of decoded) {
-      out += allowed.test(char) ? char : percentEncode(char);
-    }
-    return out;
-  });
+    out += lead.toUpperCase();
+    i += 1;
+  }
+  return out;
 }
 
 /**
