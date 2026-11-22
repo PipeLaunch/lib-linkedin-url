@@ -488,8 +488,8 @@ describe("symbol allow-list: emoji, lookalikes and variation selectors", () => {
     // variation selectors: invisible, emoji/text presentation only
     "https://linkedin.com/in/jane\uFE0F",
     "https://linkedin.com/in/jane\uFE0E",
-    "https://linkedin.com/in/acme\u00A9\uFE0F", // ©️
-    "https://linkedin.com/in/acme\u2122\uFE0F", // ™️
+    "https://linkedin.com/in/acme\u00A9\uFE0F", // © + U+FE0F
+    "https://linkedin.com/in/acme\u2122\uFE0F", // ™ + U+FE0F
   ];
   for (const url of rejected) {
     it(`rejects ${JSON.stringify(url)}`, () => {
