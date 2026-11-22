@@ -170,17 +170,21 @@ extractCountryName("https://www.linkedin.com/company/test"); // -> ""
 ## Slug normalization
 
 Since 2.1.0, raw and percent-encoded spellings of a slug give the same
-answer from every function. The library returns the **decoded** form:
+answer from every function for every character a slug may contain. The
+library returns the **decoded** form:
 
 - an escape that decodes (as UTF-8) to a character allowed in a slug is
   decoded: `cima%C2%AE` -> `cima®`, `%E4%B8%AD` -> `中`;
-- any other escape (space, `/`, `?`, `<`, control characters) is kept,
-  written with **uppercase** hex: `jane%2fdoe` -> `jane%2Fdoe`;
+- any other escape (space, `/`, `?`, `<`, control characters, emoji,
+  symbols outside `© ® ° ℠ ™`, the variation selectors U+FE0E/U+FE0F) is
+  kept, written with **uppercase** hex: `jane%2fdoe` -> `jane%2Fdoe`;
 - a byte that is not valid UTF-8 is kept escaped on its own, and the bytes
   around it are still decoded: `jane%C2%AE%ff` -> `jane®%FF`;
 - validity is checked on the decoded slug, so an escape that decodes to a
   character that may not start a slug (`%C2%AE`, `%2E`, `%5F`, ...) is rejected
-  in first position, exactly like the raw character;
+  in first position, exactly like the raw character. A kept escape (`%20`,
+  `%2F`, an emoji) may not start a slug either; only a byte that is not valid
+  UTF-8 (`%FFjane`) may;
 - `extract*` functions keep the case of letters; `generateCanonical*`
   functions lowercase letters but not the hex digits of kept escapes.
 
@@ -201,9 +205,10 @@ the same way, against their stricter character set (no `~`, no symbols), so
   well-formed, but the library never contacts LinkedIn to check that the
   profile exists.
 - Person, company and school slugs must start (after any leading `-`/`~`)
-  with a letter, digit or percent-escape; non-ASCII symbols (`®`, `™`, `©`,
-  `°`) are accepted after that, except emoji and slash-lookalikes (`∕`, `⁄`),
-  which are only accepted percent-encoded and stay encoded. ASCII symbols
+  with a letter, digit or an escape that is not valid UTF-8. After that the
+  only symbols allowed literally are `©`, `®`, `°`, `℠` and `™`; any other
+  symbol (emoji, slash-lookalikes such as `∕` or `⁄`, lookalikes such as `＜`
+  or `˜`) is only accepted percent-encoded and stays encoded. ASCII symbols
   (`<`, `+`, `=`, `|`, ...) and whitespace never.
 - The legacy `/pub/<name>/<id>/<id>/<id>` format is only recognized when
   explicitly enabled with `{ numeric: true }`; those URLs no longer exist on

@@ -14,17 +14,18 @@ upgrading if you store or compare these values.
 
 ### Fixed
 
-- Person, company and school slugs may contain non-ASCII Unicode symbols
-  (`®`, `™`, `©`, `°`) after the first character, e.g.
+- Person, company and school slugs may contain the symbols `©`, `®`, `°`,
+  `℠` and `™` after the first character, e.g.
   `/in/adam-hirsch-cima®-crpc®-6a2a9b3`; LinkedIn issues these and they were
   previously rejected while the percent-encoded form passed. A slug must still
-  start (after any `-`/`~`) with a letter, digit or percent-escape, so
-  `/in/®` and `/in/-®-` stay invalid. Emoji (`😀`, `❤`, flags, skin-tone
-  modifiers) and slash-lookalikes (`∕` U+2215, `⁄` U+2044, `∖`, `⧸`, `╱`, ...)
-  are not accepted literally and stay percent-encoded when given encoded, so
-  a canonical URL never shows a second fake path segment. ASCII symbols,
-  whitespace and control characters are still rejected. The legacy `/pub/`
-  character set is unchanged.
+  start (after any `-`/`~`) with a letter, digit or an escape that is not
+  valid UTF-8, so `/in/®` and `/in/-®-` stay invalid. This is an allow-list: every other
+  symbol, including emoji (`😀`, `❤`, flags), slash-lookalikes (`∕`, `⁄`,
+  `⫽`, `⌿`) and lookalikes of ASCII characters (`＜`, `˜`, `´`), is
+  rejected literally and stays percent-encoded when given encoded, so a
+  canonical URL never shows a fake path segment or one slug posing as
+  another. ASCII symbols, whitespace and control characters are still
+  rejected.
 
 ### Changed
 
@@ -39,16 +40,30 @@ upgrading if you store or compare these values.
   - a symbol: `/in/%C2%AE`, `/in/%E2%84%A2jane`;
   - `.`, `_`, `&` or `'`: `/in/%2Ejane`, `/in/%5Fjane`, `/in/%26jane`,
     `/in/%27jane`;
-  - a combining mark: `/in/%CC%81jane`.
+  - a combining mark: `/in/%CC%81jane`;
+  - a character that stays escaped because it may not appear literally at
+    all (space, `/`, an emoji, a lookalike symbol, U+FE0F): `/in/%20jane`,
+    `/in/%2Fjane`, `/in/%F0%9F%98%80`, `/in/%E2%88%95jane`.
 
-  The same applies to company and school slugs.
+  Only an escape that is not valid UTF-8 (`/in/%FFjane`) may still start a
+  slug. The same applies to company and school slugs and to `/pub/` names.
 
+- The variation selectors U+FE0E and U+FE0F (invisible; they only pick the
+  text or emoji look of the previous character, as in `❤️` or `©️`) are no
+  longer accepted literally as combining marks, in any slug including
+  `/pub/` names, and stay percent-encoded when given encoded:
+  `/in/jane%E2%9D%A4%EF%B8%8F` canonicalizes with both characters escaped.
+  `/in/jane\uFE0F` was valid in 2.0.2.
+- `isNumericCompanyLinkedInProfileUrl()` reads the decoded slug, so a
+  percent-encoded numeric ID now counts as numeric:
+  `/company/%31%30%33%35` returns `true` (it returned `false` in 2.0.2) and
+  canonicalizes to `https://linkedin.com/company/1035`.
 - Bytes that are not valid UTF-8 stay escaped one by one and do not stop
   their neighbours from decoding: `jane%C2%AE%FF` and `jane®%FF` both give
   `jane®%FF`, and `/in/%C2%AE%FF` is rejected like `/in/®%FF`.
 - Legacy `/pub/` names (`{ numeric: true }`) get the same normalization
-  against their own, unchanged character set: `/pub/caf%C3%A9/1/2/3` extracts
-  `café`, and `canonicalPubUrl` keeps uppercase hex for escapes it does not
+  against their own character set (unchanged except for U+FE0E/U+FE0F):
+  `/pub/caf%C3%A9/1/2/3` extracts `café`, and `canonicalPubUrl` keeps uppercase hex for escapes it does not
   decode (`%C2%AE`, previously lowercased to `%c2%ae`). A name whose
   escapes decode to a character not allowed first (`/pub/%2Djane/1/2/3`) is
   now rejected, like its raw form.

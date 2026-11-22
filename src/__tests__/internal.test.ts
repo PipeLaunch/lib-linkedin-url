@@ -89,6 +89,12 @@ describe("normalizeSlug", () => {
     ["a%e2%88%95b", "a%E2%88%95b"],
     ["a%F0%9F%98%80", "a%F0%9F%98%80"],
     ["a%E2%84%A2", "a™"],
+    ["a%E2%84%A0", "a℠"],
+    ["a%C2%B0", "a°"],
+    // symbols outside the allow-list and variation selectors stay escaped
+    ["a%E2%82%AC", "a%E2%82%AC"],
+    ["a%E2%9D%A4%ef%b8%8f", "a%E2%9D%A4%EF%B8%8F"],
+    ["a%E2%AB%BD", "a%E2%AB%BD"],
     ["a%21%2a", "a%21%2A"],
   ];
   for (const [slug, expected] of cases) {

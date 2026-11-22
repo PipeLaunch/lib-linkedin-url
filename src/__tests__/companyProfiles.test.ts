@@ -302,3 +302,26 @@ describe("isNumericCompanyLinkedInProfileUrl", () => {
     });
   }
 });
+
+describe("isNumericCompanyLinkedInProfileUrl with percent-encoded digits", () => {
+  // since 2.1.0 the slug is decoded first, so an encoded numeric ID is numeric
+  it("treats /company/%31%30%33%35 as numeric", () => {
+    assert.equal(
+      isNumericCompanyLinkedInProfileUrl("linkedin.com/company/%31%30%33%35"),
+      true,
+    );
+    assert.equal(
+      generateCanonicalCompanyLinkedInProfileUrl(
+        "linkedin.com/company/%31%30%33%35",
+      ),
+      "https://linkedin.com/company/1035",
+    );
+  });
+
+  it("does not treat a partly encoded non-digit as numeric", () => {
+    assert.equal(
+      isNumericCompanyLinkedInProfileUrl("linkedin.com/company/%31%30x"),
+      false,
+    );
+  });
+});

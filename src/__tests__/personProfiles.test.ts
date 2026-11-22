@@ -444,7 +444,7 @@ describe("legacy /pub/ percent-encoding", () => {
   }
 });
 
-describe("symbol allow-list: emoji and slash-lookalikes", () => {
+describe("symbol allow-list: emoji, lookalikes and variation selectors", () => {
   // still accepted literally
   const accepted = [
     "https://linkedin.com/in/jane-doe-cfa®",
@@ -452,7 +452,6 @@ describe("symbol allow-list: emoji and slash-lookalikes", () => {
     "https://linkedin.com/in/jane-doe-acme™",
     "https://linkedin.com/in/jane-doe-360°",
     "https://linkedin.com/in/jane-doe-acme℠",
-    "https://linkedin.com/in/jane-doe-€uro",
   ];
   for (const url of accepted) {
     it(`accepts ${url}`, () => {
@@ -473,6 +472,23 @@ describe("symbol allow-list: emoji and slash-lookalikes", () => {
     "https://linkedin.com/in/jane\u{1F1FA}\u{1F1F8}", // 🇺🇸
     "https://linkedin.com/in/jane\u{1F44D}\u{1F3FB}", // 👍🏻
     "https://www.linkedin.com/company/acme\u{1F680}", // 🚀
+    // slash-lookalikes outside any deny-list
+    "https://linkedin.com/in/jane\u2AFDdoe", // ⫽ double solidus operator
+    "https://linkedin.com/in/jane\u233Fdoe", // ⌿ APL slash bar
+    "https://linkedin.com/in/jane\u{1F67C}doe", // 🙼 very heavy solidus
+    // lookalikes of ASCII characters
+    "https://linkedin.com/in/jane\uFF1Cx", // ＜ fullwidth <
+    "https://linkedin.com/in/jane\uFE64x", // ﹤ small <
+    "https://linkedin.com/in/jane\u02C2x", // ˂ modifier <
+    "https://linkedin.com/in/jane\u02DCx", // ˜ looks like ~
+    "https://linkedin.com/in/jane\u00B4x", // ´ looks like '
+    // other symbols are no longer accepted
+    "https://linkedin.com/in/jane-doe-€uro",
+    // variation selectors: invisible, emoji/text presentation only
+    "https://linkedin.com/in/jane\uFE0F",
+    "https://linkedin.com/in/jane\uFE0E",
+    "https://linkedin.com/in/acme\u00A9\uFE0F", // ©️
+    "https://linkedin.com/in/acme\u2122\uFE0F", // ™️
   ];
   for (const url of rejected) {
     it(`rejects ${JSON.stringify(url)}`, () => {
@@ -497,6 +513,15 @@ describe("symbol allow-list: emoji and slash-lookalikes", () => {
       "https://linkedin.com/in/jane%F0%9F%98%80",
       "https://linkedin.com/in/jane%F0%9F%98%80",
     ],
+    // the emoji and its variation selector both stay escaped
+    [
+      "https://linkedin.com/in/jane%E2%9D%A4%ef%b8%8f",
+      "https://linkedin.com/in/jane%E2%9D%A4%EF%B8%8F",
+    ],
+    [
+      "https://linkedin.com/in/jane%E2%AB%BDdoe",
+      "https://linkedin.com/in/jane%E2%AB%BDdoe",
+    ],
   ];
   for (const [url, canonical] of kept) {
     it(`${url} -> "${canonical}"`, () => {
@@ -505,4 +530,77 @@ describe("symbol allow-list: emoji and slash-lookalikes", () => {
       assert.equal(generateCanonicalLinkedInProfileUrl(canonical), canonical);
     });
   }
+});
+
+describe("first unit after normalization", () => {
+  // an escape that still decodes to a character may not start a slug,
+  // exactly like the raw character
+  const rejected = [
+    "https://linkedin.com/in/%20jane",
+    "https://linkedin.com/in/%2Fjane",
+    "https://linkedin.com/in/-%2Fjane",
+    "https://linkedin.com/in/%F0%9F%98%80",
+    "https://linkedin.com/in/%E2%88%95jane",
+    "https://linkedin.com/in/%EF%BC%8Fjane", // fullwidth ／
+    "https://linkedin.com/in/%EF%B8%8Fjane", // U+FE0F
+    "https://www.linkedin.com/company/%20acme",
+    "https://www.linkedin.com/school/%2Facme",
+  ];
+  for (const url of rejected) {
+    it(`rejects ${url}`, () => {
+      assert.equal(
+        isValidLinkedInProfileUrl(url) || isValidCompanyLinkedInProfileUrl(url),
+        false,
+      );
+    });
+  }
+
+  // an escape that is not valid UTF-8 may still start a slug
+  const accepted: [url: string, canonical: string][] = [
+    ["https://linkedin.com/in/%ffjane", "https://linkedin.com/in/%FFjane"],
+    ["https://linkedin.com/in/~%C2jane", "https://linkedin.com/in/~%C2jane"],
+    ["https://linkedin.com/in/%41ne", "https://linkedin.com/in/ane"],
+  ];
+  for (const [url, canonical] of accepted) {
+    it(`accepts ${url} -> "${canonical}"`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+      assert.equal(generateCanonicalLinkedInProfileUrl(url), canonical);
+      assert.equal(generateCanonicalLinkedInProfileUrl(canonical), canonical);
+    });
+  }
+
+  describe("legacy /pub/ names", () => {
+    const opts = { numeric: true };
+    const rejectedPub = [
+      "linkedin.com/pub/%C2%AEjane/1/2/3",
+      "linkedin.com/pub/%20jane/1/2/3",
+      "linkedin.com/pub/%7Ejane/1/2/3",
+      "linkedin.com/pub/jane%EF%B8%8F/1/2/3".replace("%EF%B8%8F", "\uFE0F"),
+    ];
+    for (const url of rejectedPub) {
+      it(`rejects ${JSON.stringify(url)}`, () => {
+        assert.equal(isValidLinkedInProfileUrl(url, opts), false);
+      });
+    }
+
+    it("accepts an undecodable first escape", () => {
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(
+          "linkedin.com/pub/%ffjane/1/2/3",
+          opts,
+        ),
+        "https://linkedin.com/pub/%FFjane/1/2/3",
+      );
+    });
+
+    it("keeps U+FE0F escaped", () => {
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(
+          "linkedin.com/pub/jane%ef%b8%8f/1/2/3",
+          opts,
+        ),
+        "https://linkedin.com/pub/jane%EF%B8%8F/1/2/3",
+      );
+    });
+  });
 });

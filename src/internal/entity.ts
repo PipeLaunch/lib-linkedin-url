@@ -99,24 +99,53 @@ function decodeEscapeRun(run: string, allowed: RegExp): string {
   let out = "";
   let i = 0;
   while (i < escapes.length) {
-    const lead = escapes[i] ?? "";
-    const length = utf8SequenceLength(parseInt(lead.slice(1), 16));
-    if (length > 0 && i + length <= escapes.length) {
-      try {
-        // decodeURIComponent rejects overlong forms, surrogates and bad
-        // continuation bytes, so a successful decode is one valid code point.
-        const char = decodeURIComponent(escapes.slice(i, i + length).join(""));
-        out += allowed.test(char) ? char : percentEncode(char);
-        i += length;
-        continue;
-      } catch {
-        // not a valid sequence: fall through and keep the lead byte escaped
-      }
+    const decoded = decodeSequenceAt(escapes, i);
+    if (decoded) {
+      out += allowed.test(decoded.char)
+        ? decoded.char
+        : percentEncode(decoded.char);
+      i += decoded.length;
+    } else {
+      out += (escapes[i] ?? "").toUpperCase();
+      i += 1;
     }
-    out += lead.toUpperCase();
-    i += 1;
   }
   return out;
+}
+
+/**
+ * Decodes the UTF-8 sequence that starts at `escapes[i]`. Returns `null` when
+ * it is not a valid sequence (bad lead byte, missing or wrong continuation
+ * bytes, overlong form, surrogate).
+ */
+function decodeSequenceAt(
+  escapes: readonly string[],
+  i: number,
+): { char: string; length: number } | null {
+  const length = utf8SequenceLength(parseInt((escapes[i] ?? "").slice(1), 16));
+  if (length === 0 || i + length > escapes.length) return null;
+  try {
+    // decodeURIComponent rejects overlong forms, surrogates and bad
+    // continuation bytes, so a successful decode is one valid code point.
+    const char = decodeURIComponent(escapes.slice(i, i + length).join(""));
+    return { char, length };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Checks the first unit of a normalized slug (after any leading `-`/`~`).
+ * The slug pattern accepts a percent-escape there, but after normalization an
+ * escape that still decodes to a character is one that may not appear
+ * literally (space, `/`, an emoji, a lookalike symbol, U+FE0F, ...). Such a
+ * slug is rejected, exactly like its raw form; only an escape that is not
+ * valid UTF-8 may start a slug.
+ */
+function hasValidFirstUnit(slug: string): boolean {
+  const run = /^[~-]*((?:%[0-9a-f]{2})+)/i.exec(slug)?.[1];
+  if (!run) return true;
+  return decodeSequenceAt(run.match(/%[0-9a-f]{2}/gi) ?? [], 0) === null;
 }
 
 /**
@@ -135,10 +164,10 @@ export function matchEntityUrl(
   if (!isNonEmptyString(url) || DUPLICATED_RE.test(url)) return null;
   const match = ENTITY_RE[kind].exec(addHttpsIfMissing(url));
   if (!match) return null;
-  // Validate the normalized slug as well, so `/in/%C2%AE` is rejected just
-  // like `/in/®` (a slug may not start with a symbol).
+  // Validate the normalized slug as well, so `/in/%C2%AE` and `/in/%20jane`
+  // are rejected just like `/in/®` and `/in/ jane`.
   const slug = normalizeSlug(match[2] ?? "");
-  if (!PROFILE_SLUG_RE.test(slug)) return null;
+  if (!PROFILE_SLUG_RE.test(slug) || !hasValidFirstUnit(slug)) return null;
   return { segment: (match[1] ?? "").toLowerCase(), slug };
 }
 
@@ -154,9 +183,10 @@ export function matchPubUrl(url: string): PubMatch | null {
   if (!isNonEmptyString(url) || DUPLICATED_RE.test(url)) return null;
   const match = PUB_RE.exec(addHttpsIfMissing(url));
   if (!match) return null;
-  // Re-check after decoding, so `/pub/%2Djane/...` is rejected like `/pub/-jane/...`.
+  // Re-check after decoding, so `/pub/%2Djane/...` and `/pub/%C2%AEjane/...`
+  // are rejected like `/pub/-jane/...` and `/pub/®jane/...`.
   const name = normalizeSlug(match[1] ?? "", PUB_SLUG_CHAR_RE);
-  if (!PUB_SLUG_RE.test(name)) return null;
+  if (!PUB_SLUG_RE.test(name) || !hasValidFirstUnit(name)) return null;
   return { name, ids: match[2] ?? "" };
 }
 

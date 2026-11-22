@@ -23,7 +23,16 @@ const PCT = String.raw`%[0-9a-f]{2}`;
  * separator punctuation and percent-encoded UTF-8 bytes, so only the character
  * set is validated here, not the length.
  */
-const SLUG_CHAR = String.raw`[\p{L}\p{M}\p{Nd}&'._-]`;
+/**
+ * Combining marks allowed in a slug: every `\p{M}` except the variation
+ * selectors U+FE0E/U+FE0F. Those only switch the text/emoji presentation of
+ * the character before them (`❤️`, `©️`), carry no letter of their own and are
+ * invisible, so they stay percent-encoded and are rejected literally.
+ */
+const MARK = String.raw`(?![︎️])\p{M}`;
+
+/** One character allowed after the first unit of a legacy `/pub/` slug. */
+const SLUG_CHAR = String.raw`(?:[\p{L}\p{Nd}&'._-]|${MARK})`;
 
 const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${SLUG_CHAR})*`;
 
@@ -34,32 +43,26 @@ export const PUB_SLUG_RE = new RegExp(String.raw`^(?:${SLUG})$`, "iu");
 export const PUB_SLUG_CHAR_RE = new RegExp(String.raw`^${SLUG_CHAR}$`, "u");
 
 /**
- * Symbols that render like `/` or `\` (fraction slash, division slash, set
- * minus, big solidus, box-drawing and mathematical diagonals). Accepted
- * literally, they would make one slug look like two path segments.
+ * The symbols allowed in a person, company or school slug: the marks LinkedIn
+ * issues in credential-style slugs (`cima®`, `acme™`, `acme©`, `acme℠`,
+ * `360°`). An allow-list on purpose: the rest of `\p{S}` holds emoji,
+ * slash-lookalikes (`∕`, `⁄`, `⫽`, `⌿`) and lookalikes of ASCII characters
+ * (`＜`, `˜`, `´`) that would let one slug pass for another. Any other symbol
+ * is rejected literally and stays percent-encoded.
  */
-const SLASH_LIKE = String.raw`⁄∕∖╱╲⟋⟍⧵-⧹`;
-
-/**
- * A non-ASCII Unicode symbol (`\p{S}`) that is allowed in a slug: `®`, `©` and
- * `™`, plus any other non-ASCII symbol (`°`, `℠`, `€`, ...) that is neither an
- * emoji (`\p{Emoji}`: `😀`, `❤`, regional-indicator flags, skin-tone
- * modifiers) nor slash-like ({@link SLASH_LIKE}). `®`, `©` and `™` carry the
- * Emoji property too, so they are listed explicitly. ASCII symbols (`<`, `>`,
- * `+`, `=`, `|`, `^`, `` ` ``, `$`) stay rejected: LinkedIn never puts them in
- * a slug, and `<`/`>` would let markup through.
- */
-const SYMBOL = String.raw`(?:[©®™]|(?![\p{Emoji}${SLASH_LIKE}])[^\P{S}\x00-\x7f])`;
+const SYMBOL = String.raw`[©®°℠™]`;
 
 /** One character allowed after the first unit of a person, company or school slug. */
-const PROFILE_SLUG_CHAR = String.raw`[\p{L}\p{M}\p{Nd}&'._~-]|${SYMBOL}`;
+const PROFILE_SLUG_CHAR = String.raw`(?:[\p{L}\p{Nd}&'._~-]|${MARK}|${SYMBOL})`;
 
 /**
  * A person, company or school slug: like {@link SLUG}, but it may also contain
- * `~` and non-ASCII symbols (`/in/jane-doe-cfa®`), and may start with any run of
- * `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`, `/in/jane~doe` are all live
- * profiles). The first unit after that run must be a letter, digit or
+ * `~` and the symbols in {@link SYMBOL} (`/in/jane-doe-cfa®`), and may start
+ * with any run of `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`, `/in/jane~doe` are
+ * all live profiles). The first unit after that run must be a letter, digit or
  * percent-escape, so `/in/-`, `/in/®`, `/in/-®-` and `/company/~` are rejected.
+ * After normalization only an undecodable escape may come first (see
+ * `hasValidFirstUnit` in entity.ts).
  * The legacy `/pub/` format keeps the stricter {@link SLUG}.
  */
 const PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${PROFILE_SLUG_CHAR})*`;
