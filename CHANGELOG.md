@@ -63,6 +63,12 @@ upgrading if you store or compare these values.
   a raw `cafe` + U+0301 all extract `café` (composed) and canonicalize to
   `https://linkedin.com/in/café`. In 2.0.2 the decomposed forms returned
   different strings. This applies to company, school and `/pub/` slugs too.
+- Slugs longer than 2048 characters (as written in the URL, escapes
+  included) are rejected, for person, company, school and `/pub/` URLs.
+  LinkedIn names are at most 100 characters (1200 fully percent-encoded).
+  The limit bounds the cost of NFC, which is quadratic on long runs of
+  combining marks: a crafted 80 000-character slug took seconds to
+  validate and is now rejected in milliseconds. 2.0.2 had no limit.
 - Bytes that are not valid UTF-8 stay escaped one by one and do not stop
   their neighbours from decoding: `jane%C2%AE%FF` and `jane®%FF` both give
   `jane®%FF`, and `/in/%C2%AE%FF` is rejected like `/in/®%FF`.

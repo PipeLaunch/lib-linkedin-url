@@ -2,7 +2,11 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { addHttpsIfMissing, isNonEmptyString } from "../internal/util.ts";
 import { TLD_TABLE } from "../internal/tld.ts";
-import { canonicalSlug, normalizeSlug } from "../internal/entity.ts";
+import {
+  MAX_SLUG_LENGTH,
+  canonicalSlug,
+  normalizeSlug,
+} from "../internal/entity.ts";
 import { PUB_SLUG_CHAR_RE } from "../internal/patterns.ts";
 
 describe("addHttpsIfMissing", () => {
@@ -128,4 +132,14 @@ describe("normalizeSlug with the /pub/ character set", () => {
       assert.equal(normalizeSlug(expected, PUB_SLUG_CHAR_RE), expected);
     });
   }
+});
+
+describe("normalizeSlug length limit", () => {
+  it("returns an empty string above MAX_SLUG_LENGTH", () => {
+    assert.equal(normalizeSlug("a".repeat(MAX_SLUG_LENGTH + 1)), "");
+    assert.equal(
+      normalizeSlug("a".repeat(MAX_SLUG_LENGTH)),
+      "a".repeat(MAX_SLUG_LENGTH),
+    );
+  });
 });

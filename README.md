@@ -212,6 +212,8 @@ the same way, against their stricter character set (no `~`, no symbols), so
   symbol (emoji, slash-lookalikes such as `∕` or `⁄`, lookalikes such as `＜`
   or `˜`) is only accepted percent-encoded and stays encoded. ASCII symbols
   (`<`, `+`, `=`, `|`, ...) and whitespace never.
+- Slugs longer than 2048 characters (escapes included) are rejected, to
+  bound the cost of Unicode normalization.
 - The legacy `/pub/<name>/<id>/<id>/<id>` format is only recognized when
   explicitly enabled with `{ numeric: true }`; those URLs no longer exist on
   linkedin.com and are useful only for parsing old datasets.

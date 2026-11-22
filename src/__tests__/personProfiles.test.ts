@@ -680,3 +680,64 @@ describe("Unicode NFC normalization", () => {
     );
   });
 });
+
+describe("slug length limit (NFC cost bound)", () => {
+  // regression: NFC reorders long runs of combining marks in quadratic time;
+  // this slug took seconds to validate before the length limit
+  const MARKS = "a" + "\u0315".repeat(40000) + "\u0300".repeat(40000);
+  const HUGE: [label: string, url: string, options?: { numeric: true }][] = [
+    ["person", `https://linkedin.com/in/${MARKS}`],
+    [
+      "legacy /pub/",
+      `https://linkedin.com/pub/${MARKS}/1/2/3`,
+      { numeric: true },
+    ],
+  ];
+  for (const [label, url, options] of HUGE) {
+    it(`rejects a ${label} slug of 80 001 characters quickly`, () => {
+      const start = performance.now();
+      assert.equal(isValidLinkedInProfileUrl(url, options), false);
+      assert.equal(extractLinkedInProfileName(url, options), "");
+      assert.equal(generateCanonicalLinkedInProfileUrl(url, options), "");
+      assert.ok(
+        performance.now() - start < 250,
+        `took ${(performance.now() - start).toFixed(0)} ms`,
+      );
+    });
+  }
+
+  it("rejects a company slug of 80 001 characters quickly", () => {
+    const url = `https://www.linkedin.com/company/${MARKS}`;
+    const start = performance.now();
+    assert.equal(isValidCompanyLinkedInProfileUrl(url), false);
+    assert.equal(generateCanonicalCompanyLinkedInProfileUrl(url), "");
+    assert.ok(performance.now() - start < 250);
+  });
+
+  it("accepts a slug of exactly 2048 characters", () => {
+    const slug = "a".repeat(2048);
+    assert.equal(
+      isValidLinkedInProfileUrl(`https://linkedin.com/in/${slug}`),
+      true,
+    );
+    assert.equal(
+      isValidLinkedInProfileUrl(`https://linkedin.com/in/${slug}a`),
+      false,
+    );
+  });
+
+  it("accepts a 100-character name fully percent-encoded as 4-byte UTF-8", () => {
+    const slug = "%F0%A0%80%80".repeat(100); // 100 x U+20000 (CJK Ext. B), 1200 characters
+    assert.equal(
+      extractLinkedInProfileName(`https://linkedin.com/in/${slug}`),
+      "\u{20000}".repeat(100),
+    );
+  });
+
+  it("validates the worst case at the limit in well under a second", () => {
+    const slug = "a" + "\u0315".repeat(1023) + "\u0300".repeat(1024);
+    const start = performance.now();
+    isValidLinkedInProfileUrl(`https://linkedin.com/in/${slug}`);
+    assert.ok(performance.now() - start < 250);
+  });
+});

@@ -54,6 +54,16 @@ function percentEncode(char: string): string {
 }
 
 /**
+ * The longest slug (as written in the URL, escapes included) that is parsed.
+ * LinkedIn vanity names are at most 100 characters, which is at most 1200
+ * characters fully percent-encoded (4 UTF-8 bytes x 3 characters each); 2048
+ * leaves room for generated suffixes. The bound matters for NFC, whose
+ * reordering of long runs of combining marks grows quadratically: 2048
+ * characters cost about 2 ms in the worst case, 80 000 cost seconds.
+ */
+export const MAX_SLUG_LENGTH = 2048;
+
+/**
  * Normalizes the percent-encoding of a slug, so the raw and encoded spellings
  * of a slug give one result. `allowed` tests one decoded code point: the
  * person/company/school character set by default, {@link PUB_SLUG_CHAR_RE}
@@ -72,11 +82,15 @@ function percentEncode(char: string): string {
  *
  * Case is preserved. The result is a fixed point: normalizing it again
  * returns the same string.
+ *
+ * A slug longer than {@link MAX_SLUG_LENGTH} characters returns `""`, which
+ * no slug pattern accepts, so the URL is rejected before NFC runs.
  */
 export function normalizeSlug(
   slug: string,
   allowed: RegExp = PROFILE_SLUG_CHAR_RE,
 ): string {
+  if (slug.length > MAX_SLUG_LENGTH) return "";
   return nfcOutsideEscapes(
     slug.replace(/(?:%[0-9a-f]{2})+/gi, (run) => decodeEscapeRun(run, allowed)),
   );
