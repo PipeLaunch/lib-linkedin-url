@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   extractLinkedInProfileName,
+  generateCanonicalCompanyLinkedInProfileUrl,
   generateCanonicalLinkedInProfileUrl,
   isValidCompanyLinkedInProfileUrl,
   isValidLinkedInProfileUrl,
@@ -602,5 +603,80 @@ describe("first unit after normalization", () => {
         "https://linkedin.com/pub/jane%EF%B8%8F/1/2/3",
       );
     });
+  });
+});
+
+describe("Unicode NFC normalization", () => {
+  const CAFE = "caf\u00E9"; // café, composed (NFC)
+  const cases: [url: string, label: string][] = [
+    ["https://linkedin.com/in/caf\u00E9", "raw composed"],
+    ["https://linkedin.com/in/cafe\u0301", "raw decomposed"],
+    ["https://linkedin.com/in/caf%C3%A9", "encoded composed"],
+    ["https://linkedin.com/in/cafe%CC%81", "encoded decomposed"],
+    [
+      "https://linkedin.com/in/cafe%cc%81/",
+      "encoded decomposed, lowercase hex",
+    ],
+  ];
+  for (const [url, label] of cases) {
+    it(`${label}: ${JSON.stringify(url)} -> "${CAFE}"`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+      assert.equal(extractLinkedInProfileName(url), CAFE);
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(url),
+        `https://linkedin.com/in/${CAFE}`,
+      );
+    });
+  }
+
+  it("keeps case while composing: CAFE + U+0301 -> CAFÉ", () => {
+    assert.equal(
+      extractLinkedInProfileName("https://linkedin.com/in/CAFE%CC%81"),
+      "CAF\u00C9",
+    );
+    assert.equal(
+      generateCanonicalLinkedInProfileUrl("https://linkedin.com/in/CAFE%CC%81"),
+      "https://linkedin.com/in/caf\u00E9",
+    );
+  });
+
+  it("composes across raw and encoded parts: e + %CC%81", () => {
+    assert.equal(
+      extractLinkedInProfileName("https://linkedin.com/in/jos%65%CC%81"),
+      "jos\u00E9",
+    );
+    assert.equal(
+      extractLinkedInProfileName("https://linkedin.com/in/jose%CC%81-doe"),
+      "jos\u00E9-doe",
+    );
+  });
+
+  it("never composes a mark with the hex digit of a kept escape", () => {
+    // %FA is not valid UTF-8 and stays escaped; U+0301 must not turn "A" into "Á"
+    const url = "https://linkedin.com/in/jane%FA%CC%81";
+    assert.equal(extractLinkedInProfileName(url), "jane%FA\u0301");
+    assert.equal(
+      generateCanonicalLinkedInProfileUrl(url),
+      "https://linkedin.com/in/jane%FA\u0301",
+    );
+  });
+
+  it("company and school slugs are normalized too", () => {
+    assert.equal(
+      generateCanonicalCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/Cafe%CC%81-Inc",
+      ),
+      "https://linkedin.com/company/caf\u00E9-inc",
+    );
+  });
+
+  it("legacy /pub/ names are normalized too", () => {
+    assert.equal(
+      generateCanonicalLinkedInProfileUrl(
+        "https://linkedin.com/pub/cafe%CC%81-owner/1/2/3",
+        { numeric: true },
+      ),
+      "https://linkedin.com/pub/caf\u00E9-owner/1/2/3",
+    );
   });
 });

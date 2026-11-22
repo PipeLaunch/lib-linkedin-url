@@ -185,6 +185,8 @@ library returns the **decoded** form:
   in first position, exactly like the raw character. A kept escape (`%20`,
   `%2F`, an emoji) may not start a slug either; only a byte that is not valid
   UTF-8 (`%FFjane`) may;
+- the slug is put in Unicode NFC, so `cafe%CC%81` (decomposed) and `café`
+  (composed) give the same `café`;
 - `extract*` functions keep the case of letters; `generateCanonical*`
   functions lowercase letters but not the hex digits of kept escapes.
 

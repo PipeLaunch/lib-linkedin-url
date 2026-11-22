@@ -58,6 +58,11 @@ upgrading if you store or compare these values.
   percent-encoded numeric ID now counts as numeric:
   `/company/%31%30%33%35` returns `true` (it returned `false` in 2.0.2) and
   canonicalizes to `https://linkedin.com/company/1035`.
+- Slugs are put in Unicode NFC (outside percent-escapes), so composed and
+  decomposed accents give the same slug: `/in/café`, `/in/cafe%CC%81` and
+  a raw `cafe` + U+0301 all extract `café` (composed) and canonicalize to
+  `https://linkedin.com/in/café`. In 2.0.2 the decomposed forms returned
+  different strings. This applies to company, school and `/pub/` slugs too.
 - Bytes that are not valid UTF-8 stay escaped one by one and do not stop
   their neighbours from decoding: `jane%C2%AE%FF` and `jane®%FF` both give
   `jane®%FF`, and `/in/%C2%AE%FF` is rejected like `/in/®%FF`.

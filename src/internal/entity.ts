@@ -65,18 +65,33 @@ function percentEncode(char: string): string {
  *   control characters, ...) stays escaped: `jane%20doe` -> `jane%20doe`;
  * - each byte that does not start a valid UTF-8 sequence stays escaped on its
  *   own, without blocking the bytes around it: `jane%C2%AE%FF` -> `jane®%FF`;
- * - every escape that remains is written with uppercase hex digits.
+ * - every escape that remains is written with uppercase hex digits;
+ * - the text outside escapes is put in Unicode NFC, so a decomposed accent
+ *   (`cafe%CC%81`, or a raw `e` + U+0301) and the composed one (`café`) give
+ *   the same slug.
  *
- * Everything outside escapes is returned unchanged (case preserved). The
- * result is a fixed point: normalizing it again returns the same string.
+ * Case is preserved. The result is a fixed point: normalizing it again
+ * returns the same string.
  */
 export function normalizeSlug(
   slug: string,
   allowed: RegExp = PROFILE_SLUG_CHAR_RE,
 ): string {
-  return slug.replace(/(?:%[0-9a-f]{2})+/gi, (run) =>
-    decodeEscapeRun(run, allowed),
+  return nfcOutsideEscapes(
+    slug.replace(/(?:%[0-9a-f]{2})+/gi, (run) => decodeEscapeRun(run, allowed)),
   );
+}
+
+/**
+ * Applies NFC to each stretch of text between percent-escapes, never across
+ * one: a combining mark after a kept escape must not compose with its hex
+ * digit (`%FA` + U+0301 would otherwise become `%FÁ`).
+ */
+function nfcOutsideEscapes(text: string): string {
+  return text
+    .split(/(%[0-9a-f]{2})/i)
+    .map((part, index) => (index % 2 === 1 ? part : part.normalize("NFC")))
+    .join("");
 }
 
 /** Length of the UTF-8 sequence a lead byte starts, or 0 when it cannot start one. */
@@ -150,10 +165,11 @@ function hasValidFirstUnit(slug: string): boolean {
 
 /**
  * Lowercases a normalized slug for a canonical URL, keeping the hex digits of
- * the remaining percent-escapes uppercase.
+ * the remaining percent-escapes uppercase. NFC is re-applied because
+ * lowercasing can leave a string that is no longer in NFC.
  */
 export function canonicalSlug(slug: string): string {
-  return upperEscapes(slug.toLowerCase());
+  return nfcOutsideEscapes(upperEscapes(slug.toLowerCase()));
 }
 
 /** Matches a LinkedIn profile URL of the given kind. Returns `null` when invalid. */

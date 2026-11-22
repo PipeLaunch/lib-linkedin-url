@@ -89,6 +89,11 @@ describe("normalizeSlug", () => {
     ["a%e2%88%95b", "a%E2%88%95b"],
     ["a%F0%9F%98%80", "a%F0%9F%98%80"],
     ["a%E2%84%A2", "a™"],
+    // NFC: decomposed accents compose, but never across a kept escape
+    ["cafe%CC%81", "caf\u00E9"],
+    ["cafe\u0301", "caf\u00E9"],
+    ["a%FA%CC%81", "a%FA\u0301"],
+    ["\u212Bngstrom", "\u00C5ngstrom"],
     ["a%E2%84%A0", "a℠"],
     ["a%C2%B0", "a°"],
     // symbols outside the allow-list and variation selectors stay escaped
