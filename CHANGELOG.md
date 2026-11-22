@@ -19,9 +19,12 @@ upgrading if you store or compare these values.
   `/in/adam-hirsch-cima®-crpc®-6a2a9b3`; LinkedIn issues these and they were
   previously rejected while the percent-encoded form passed. A slug must still
   start (after any `-`/`~`) with a letter, digit or percent-escape, so
-  `/in/®` and `/in/-®-` stay invalid. ASCII symbols, whitespace and control
-  characters are still rejected. The legacy `/pub/` character set is
-  unchanged.
+  `/in/®` and `/in/-®-` stay invalid. Emoji (`😀`, `❤`, flags, skin-tone
+  modifiers) and slash-lookalikes (`∕` U+2215, `⁄` U+2044, `∖`, `⧸`, `╱`, ...)
+  are not accepted literally and stay percent-encoded when given encoded, so
+  a canonical URL never shows a second fake path segment. ASCII symbols,
+  whitespace and control characters are still rejected. The legacy `/pub/`
+  character set is unchanged.
 
 ### Changed
 

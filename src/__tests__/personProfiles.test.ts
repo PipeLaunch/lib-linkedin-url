@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   extractLinkedInProfileName,
   generateCanonicalLinkedInProfileUrl,
+  isValidCompanyLinkedInProfileUrl,
   isValidLinkedInProfileUrl,
 } from "../index.ts";
 import type { CanonicalPersonProfileUrlOptions } from "../index.ts";
@@ -439,6 +440,69 @@ describe("legacy /pub/ percent-encoding", () => {
     it(`rejects ${url}`, () => {
       assert.equal(isValidLinkedInProfileUrl(url, opts), false);
       assert.equal(extractLinkedInProfileName(url, opts), "");
+    });
+  }
+});
+
+describe("symbol allow-list: emoji and slash-lookalikes", () => {
+  // still accepted literally
+  const accepted = [
+    "https://linkedin.com/in/jane-doe-cfa®",
+    "https://linkedin.com/in/jane-doe-acme©",
+    "https://linkedin.com/in/jane-doe-acme™",
+    "https://linkedin.com/in/jane-doe-360°",
+    "https://linkedin.com/in/jane-doe-acme℠",
+    "https://linkedin.com/in/jane-doe-€uro",
+  ];
+  for (const url of accepted) {
+    it(`accepts ${url}`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+    });
+  }
+
+  const rejected = [
+    // slash-lookalikes: one slug would read as two path segments
+    "https://linkedin.com/in/jane\u2215doe", // ∕ division slash
+    "https://linkedin.com/in/jane\u2044doe", // ⁄ fraction slash
+    "https://linkedin.com/in/jane\u2216doe", // ∖ set minus
+    "https://linkedin.com/in/jane\u29f8doe", // ⧸ big solidus
+    "https://linkedin.com/in/jane\u2571doe", // ╱ box-drawing diagonal
+    // emoji
+    "https://linkedin.com/in/jane\u{1F600}", // 😀
+    "https://linkedin.com/in/jane\u2764", // ❤
+    "https://linkedin.com/in/jane\u{1F1FA}\u{1F1F8}", // 🇺🇸
+    "https://linkedin.com/in/jane\u{1F44D}\u{1F3FB}", // 👍🏻
+    "https://www.linkedin.com/company/acme\u{1F680}", // 🚀
+  ];
+  for (const url of rejected) {
+    it(`rejects ${JSON.stringify(url)}`, () => {
+      assert.equal(
+        isValidLinkedInProfileUrl(url) || isValidCompanyLinkedInProfileUrl(url),
+        false,
+      );
+    });
+  }
+
+  // encoded, they are valid but never decoded: the canonical URL keeps the escapes
+  const kept: [url: string, canonical: string][] = [
+    [
+      "https://linkedin.com/in/jane%e2%88%95doe",
+      "https://linkedin.com/in/jane%E2%88%95doe",
+    ],
+    [
+      "https://linkedin.com/in/jane%E2%81%84doe",
+      "https://linkedin.com/in/jane%E2%81%84doe",
+    ],
+    [
+      "https://linkedin.com/in/jane%F0%9F%98%80",
+      "https://linkedin.com/in/jane%F0%9F%98%80",
+    ],
+  ];
+  for (const [url, canonical] of kept) {
+    it(`${url} -> "${canonical}"`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+      assert.equal(generateCanonicalLinkedInProfileUrl(url), canonical);
+      assert.equal(generateCanonicalLinkedInProfileUrl(canonical), canonical);
     });
   }
 });

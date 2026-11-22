@@ -34,11 +34,22 @@ export const PUB_SLUG_RE = new RegExp(String.raw`^(?:${SLUG})$`, "iu");
 export const PUB_SLUG_CHAR_RE = new RegExp(String.raw`^${SLUG_CHAR}$`, "u");
 
 /**
- * A non-ASCII Unicode symbol (`\p{S}`: `®`, `™`, `©`, `°`, ...). ASCII symbols
- * (`<`, `>`, `+`, `=`, `|`, `^`, `` ` ``, `$`) stay rejected: LinkedIn never puts
- * them in a slug, and `<`/`>` would let markup through.
+ * Symbols that render like `/` or `\` (fraction slash, division slash, set
+ * minus, big solidus, box-drawing and mathematical diagonals). Accepted
+ * literally, they would make one slug look like two path segments.
  */
-const SYMBOL = String.raw`[^\P{S}\x00-\x7f]`;
+const SLASH_LIKE = String.raw`⁄∕∖╱╲⟋⟍⧵-⧹`;
+
+/**
+ * A non-ASCII Unicode symbol (`\p{S}`) that is allowed in a slug: `®`, `©` and
+ * `™`, plus any other non-ASCII symbol (`°`, `℠`, `€`, ...) that is neither an
+ * emoji (`\p{Emoji}`: `😀`, `❤`, regional-indicator flags, skin-tone
+ * modifiers) nor slash-like ({@link SLASH_LIKE}). `®`, `©` and `™` carry the
+ * Emoji property too, so they are listed explicitly. ASCII symbols (`<`, `>`,
+ * `+`, `=`, `|`, `^`, `` ` ``, `$`) stay rejected: LinkedIn never puts them in
+ * a slug, and `<`/`>` would let markup through.
+ */
+const SYMBOL = String.raw`(?:[©®™]|(?![\p{Emoji}${SLASH_LIKE}])[^\P{S}\x00-\x7f])`;
 
 /** One character allowed after the first unit of a person, company or school slug. */
 const PROFILE_SLUG_CHAR = String.raw`[\p{L}\p{M}\p{Nd}&'._~-]|${SYMBOL}`;

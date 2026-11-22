@@ -85,6 +85,10 @@ describe("normalizeSlug", () => {
     ["a%F0%9F%98", "a%F0%9F%98"],
     ["a%C2%AE%20b", "a®%20b"],
     ["%41b", "Ab"],
+    // slash-lookalikes and emoji are not decoded
+    ["a%e2%88%95b", "a%E2%88%95b"],
+    ["a%F0%9F%98%80", "a%F0%9F%98%80"],
+    ["a%E2%84%A2", "a™"],
     ["a%21%2a", "a%21%2A"],
   ];
   for (const [slug, expected] of cases) {

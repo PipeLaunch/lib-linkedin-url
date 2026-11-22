@@ -202,8 +202,9 @@ the same way, against their stricter character set (no `~`, no symbols), so
   profile exists.
 - Person, company and school slugs must start (after any leading `-`/`~`)
   with a letter, digit or percent-escape; non-ASCII symbols (`®`, `™`, `©`,
-  `°`) are accepted after that, ASCII symbols (`<`, `+`, `=`, `|`, ...) and
-  whitespace never.
+  `°`) are accepted after that, except emoji and slash-lookalikes (`∕`, `⁄`),
+  which are only accepted percent-encoded and stay encoded. ASCII symbols
+  (`<`, `+`, `=`, `|`, ...) and whitespace never.
 - The legacy `/pub/<name>/<id>/<id>/<id>` format is only recognized when
   explicitly enabled with `{ numeric: true }`; those URLs no longer exist on
   linkedin.com and are useful only for parsing old datasets.
