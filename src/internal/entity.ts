@@ -5,6 +5,8 @@ import {
   PROFILE_SLUG_CHAR_RE,
   PROFILE_SLUG_RE,
   PUB_RE,
+  PUB_SLUG_CHAR_RE,
+  PUB_SLUG_RE,
   SCHOOL_RE,
 } from "./patterns.ts";
 import {
@@ -36,9 +38,27 @@ function upperEscapes(text: string): string {
   return text.replace(/%[0-9a-f]{2}/gi, (escape) => escape.toUpperCase());
 }
 
+const UTF8 = new TextEncoder();
+
 /**
- * Normalizes the percent-encoding of a person, company or school slug, so the
- * raw and encoded spellings of a slug give one result:
+ * Percent-encodes every UTF-8 byte of `char` with uppercase hex. Unlike
+ * `encodeURIComponent`, it also escapes `~ ! * ( )`, so a decoded character
+ * that is not allowed in a slug always goes back to escapes (`%21`, `%7E`).
+ */
+function percentEncode(char: string): string {
+  let out = "";
+  for (const byte of UTF8.encode(char)) {
+    out += `%${byte.toString(16).toUpperCase().padStart(2, "0")}`;
+  }
+  return out;
+}
+
+/**
+ * Normalizes the percent-encoding of a slug, so the raw and encoded spellings
+ * of a slug give one result. `allowed` tests one decoded code point: the
+ * person/company/school character set by default, {@link PUB_SLUG_CHAR_RE}
+ * for legacy `/pub/` names.
+ *
  * - an escape run that decodes (as UTF-8) to characters allowed in a slug is
  *   decoded: `cima%C2%AE` -> `cima®`, `%E4%B8%AD` -> `中`;
  * - a decoded character that is not allowed literally (space, `/`, `?`, `<`,
@@ -49,7 +69,10 @@ function upperEscapes(text: string): string {
  * Everything outside escapes is returned unchanged (case preserved). The
  * result is a fixed point: normalizing it again returns the same string.
  */
-export function normalizeSlug(slug: string): string {
+export function normalizeSlug(
+  slug: string,
+  allowed: RegExp = PROFILE_SLUG_CHAR_RE,
+): string {
   return slug.replace(/(?:%[0-9a-f]{2})+/gi, (run) => {
     let decoded: string;
     try {
@@ -59,9 +82,7 @@ export function normalizeSlug(slug: string): string {
     }
     let out = "";
     for (const char of decoded) {
-      out += PROFILE_SLUG_CHAR_RE.test(char)
-        ? char
-        : upperEscapes(encodeURIComponent(char));
+      out += allowed.test(char) ? char : percentEncode(char);
     }
     return out;
   });
@@ -91,7 +112,7 @@ export function matchEntityUrl(
 }
 
 export interface PubMatch {
-  /** The profile name as it appears in the URL (case preserved). */
+  /** The normalized profile name (see {@link normalizeSlug}), case preserved. */
   name: string;
   /** The three id segments, including their leading slashes (e.g. `/1/638/7a1`). */
   ids: string;
@@ -102,7 +123,10 @@ export function matchPubUrl(url: string): PubMatch | null {
   if (!isNonEmptyString(url) || DUPLICATED_RE.test(url)) return null;
   const match = PUB_RE.exec(addHttpsIfMissing(url));
   if (!match) return null;
-  return { name: match[1] ?? "", ids: match[2] ?? "" };
+  // Re-check after decoding, so `/pub/%2Djane/...` is rejected like `/pub/-jane/...`.
+  const name = normalizeSlug(match[1] ?? "", PUB_SLUG_CHAR_RE);
+  if (!PUB_SLUG_RE.test(name)) return null;
+  return { name, ids: match[2] ?? "" };
 }
 
 /** The canonical host: `linkedin.com`, or `<subdomain|www>.linkedin.com` with `keepTld`. */
@@ -132,7 +156,8 @@ export function canonicalEntityUrl(
 
 /**
  * Builds the canonical `https://` URL for a legacy `/pub/` profile:
- * normalized host, lowercased name and id segments.
+ * normalized host, normalized and lowercased name (remaining percent-escapes
+ * keep uppercase hex), lowercased id segments.
  * Returns `""` when the URL is not a valid `/pub/` profile URL.
  */
 export function canonicalPubUrl(
@@ -141,5 +166,5 @@ export function canonicalPubUrl(
 ): string {
   const pub = matchPubUrl(url);
   if (!pub) return "";
-  return `https://${canonicalHost(url, options)}/pub/${pub.name.toLowerCase()}${pub.ids.toLowerCase()}`;
+  return `https://${canonicalHost(url, options)}/pub/${canonicalSlug(pub.name)}${pub.ids.toLowerCase()}`;
 }

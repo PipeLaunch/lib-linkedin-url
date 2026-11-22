@@ -23,7 +23,15 @@ const PCT = String.raw`%[0-9a-f]{2}`;
  * separator punctuation and percent-encoded UTF-8 bytes, so only the character
  * set is validated here, not the length.
  */
-const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|[\p{L}\p{M}\p{Nd}&'._-])*`;
+const SLUG_CHAR = String.raw`[\p{L}\p{M}\p{Nd}&'._-]`;
+
+const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${SLUG_CHAR})*`;
+
+/** A whole, already normalized legacy `/pub/` slug (see `normalizeSlug`). */
+export const PUB_SLUG_RE = new RegExp(String.raw`^(?:${SLUG})$`, "iu");
+
+/** A single decoded code point that may appear literally in a legacy `/pub/` slug. */
+export const PUB_SLUG_CHAR_RE = new RegExp(String.raw`^${SLUG_CHAR}$`, "u");
 
 /**
  * A non-ASCII Unicode symbol (`\p{S}`: `®`, `™`, `©`, `°`, ...). ASCII symbols

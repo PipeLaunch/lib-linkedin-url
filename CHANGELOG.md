@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previously rejected while the percent-encoded form passed. A slug must still
   start (after any `-`/`~`) with a letter, digit or percent-escape, so
   `/in/®` and `/in/-®-` stay invalid. ASCII symbols, whitespace and control
-  characters are still rejected. The legacy `/pub/` format is unchanged.
+  characters are still rejected. The legacy `/pub/` character set is
+  unchanged.
 
 ### Changed
 
@@ -26,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   canonical URLs). See "Slug normalization" in the README.
 - Consequently a slug whose escapes decode to a symbol in first position
   (`/in/%C2%AE`, `/in/%E2%84%A2jane`) is now rejected, like its raw form.
+- Legacy `/pub/` names (`{ numeric: true }`) get the same normalization
+  against their own, unchanged character set: `/pub/caf%C3%A9/1/2/3` extracts
+  `café`, and `canonicalPubUrl` keeps uppercase hex for escapes it does not
+  decode (`%C2%AE`, previously lowercased to `%c2%ae`). A name whose
+  escapes decode to a character not allowed first (`/pub/%2Djane/1/2/3`) is
+  now rejected, like its raw form.
 
 ## [2.0.2] - 2026-11-17
 

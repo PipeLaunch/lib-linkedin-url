@@ -186,8 +186,10 @@ generateCanonicalLinkedInProfileUrl("linkedin.com/in/Jane-Doe-CFA%C2%AE"); // "h
 generateCanonicalLinkedInProfileUrl("linkedin.com/in/Jane-Doe-CFA®"); // same
 ```
 
-A canonical URL parses back to itself. The legacy `/pub/` format is not
-normalized.
+A canonical URL parses back to itself. Legacy `/pub/` names are normalized
+the same way, against their stricter character set (no `~`, no symbols), so
+`/pub/caf%C3%A9/1/2/3` canonicalizes to `/pub/café/1/2/3`, while an escaped
+`®` stays `%C2%AE`.
 
 ## Known limitations
 

@@ -195,6 +195,23 @@ describe("generateCanonicalLinkedInProfileUrl", () => {
         "https://nl.linkedin.com/pub/other-name/11/223/544",
       ],
       ["http://nl.linkedin.com/pub/other-name/11/223/544", {}, ""],
+      // escapes are normalized like /in/ slugs, against the /pub/ charset
+      [
+        "linkedin.com/pub/Caf%C3%A9-Owner/1/2/3",
+        { numeric: true },
+        "https://linkedin.com/pub/café-owner/1/2/3",
+      ],
+      [
+        "linkedin.com/pub/jane-cfa%c2%ae/1/2/3",
+        { numeric: true },
+        "https://linkedin.com/pub/jane-cfa%C2%AE/1/2/3",
+      ],
+      [
+        "linkedin.com/pub/Jane%2fDoe/1/2/3",
+        { numeric: true },
+        "https://linkedin.com/pub/jane%2Fdoe/1/2/3",
+      ],
+      ["linkedin.com/pub/%2Djane/1/2/3", { numeric: true }, ""],
     ];
     for (const [url, options, expected] of cases) {
       it(`${url} ${JSON.stringify(options)} -> "${expected}"`, () => {
@@ -266,6 +283,17 @@ describe("unicode symbols and percent-encoding", () => {
       "jane%3Cdoe",
       "https://linkedin.com/in/jane%3Cdoe",
     ],
+    // characters encodeURIComponent leaves alone stay escaped too
+    [
+      "https://linkedin.com/in/jane%21",
+      "jane%21",
+      "https://linkedin.com/in/jane%21",
+    ],
+    [
+      "https://linkedin.com/in/jane%28doe%29",
+      "jane%28doe%29",
+      "https://linkedin.com/in/jane%28doe%29",
+    ],
     // not valid UTF-8: kept as is
     [
       "https://linkedin.com/in/jane%ff",
@@ -333,6 +361,60 @@ describe("unicode symbols and percent-encoding", () => {
         generateCanonicalLinkedInProfileUrl(url),
         `https://linkedin.com/in/${slug}`,
       );
+    });
+  }
+});
+
+describe("legacy /pub/ percent-encoding", () => {
+  const opts = { numeric: true };
+  // [url, extracted name, canonical URL]
+  const cases: [url: string, name: string, canonical: string][] = [
+    [
+      "https://de.linkedin.com/pub/Caf%C3%A9-Owner/1/638/7A1",
+      "Café-Owner",
+      "https://linkedin.com/pub/café-owner/1/638/7a1",
+    ],
+    [
+      "https://de.linkedin.com/pub/Café-Owner/1/638/7a1",
+      "Café-Owner",
+      "https://linkedin.com/pub/café-owner/1/638/7a1",
+    ],
+    [
+      "linkedin.com/pub/jane-cfa%c2%ae/1/2/3",
+      "jane-cfa%C2%AE",
+      "https://linkedin.com/pub/jane-cfa%C2%AE/1/2/3",
+    ],
+    [
+      "linkedin.com/pub/jane%7edoe/1/2/3",
+      "jane%7Edoe",
+      "https://linkedin.com/pub/jane%7Edoe/1/2/3",
+    ],
+  ];
+  for (const [url, name, canonical] of cases) {
+    it(`${url} -> "${name}", "${canonical}"`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url, opts), true);
+      assert.equal(extractLinkedInProfileName(url, opts), name);
+      assert.equal(generateCanonicalLinkedInProfileUrl(url, opts), canonical);
+    });
+    it(`${url}: parse -> canonical -> parse is stable`, () => {
+      assert.equal(isValidLinkedInProfileUrl(canonical, opts), true);
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(canonical, opts),
+        canonical,
+      );
+    });
+  }
+
+  const invalid = [
+    "linkedin.com/pub/%2Djane/1/2/3",
+    "linkedin.com/pub/-jane/1/2/3",
+    "linkedin.com/pub/jane®/1/2/3",
+    "linkedin.com/pub/jane~doe/1/2/3",
+  ];
+  for (const url of invalid) {
+    it(`rejects ${url}`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url, opts), false);
+      assert.equal(extractLinkedInProfileName(url, opts), "");
     });
   }
 });

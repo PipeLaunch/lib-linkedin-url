@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { addHttpsIfMissing, isNonEmptyString } from "../internal/util.ts";
 import { TLD_TABLE } from "../internal/tld.ts";
 import { canonicalSlug, normalizeSlug } from "../internal/entity.ts";
+import { PUB_SLUG_CHAR_RE } from "../internal/patterns.ts";
 
 describe("addHttpsIfMissing", () => {
   const cases: [url: string, expected: string][] = [
@@ -77,6 +78,7 @@ describe("normalizeSlug", () => {
     ["a%ff%C2%AE", "a%FF%C2%AE"],
     ["a%C2%AE%20b", "a®%20b"],
     ["%41b", "Ab"],
+    ["a%21%2a", "a%21%2A"],
   ];
   for (const [slug, expected] of cases) {
     it(`"${slug}" -> "${expected}" (and is a fixed point)`, () => {
@@ -90,4 +92,18 @@ describe("canonicalSlug", () => {
   it("lowercases letters but keeps escapes uppercase", () => {
     assert.equal(canonicalSlug("Jane%2FDoe-CFA®"), "jane%2Fdoe-cfa®");
   });
+});
+
+describe("normalizeSlug with the /pub/ character set", () => {
+  const cases: [slug: string, expected: string][] = [
+    ["caf%C3%A9", "café"],
+    ["jane%C2%AE", "jane%C2%AE"],
+    ["jane%7edoe", "jane%7Edoe"],
+  ];
+  for (const [slug, expected] of cases) {
+    it(`"${slug}" -> "${expected}" (and is a fixed point)`, () => {
+      assert.equal(normalizeSlug(slug, PUB_SLUG_CHAR_RE), expected);
+      assert.equal(normalizeSlug(expected, PUB_SLUG_CHAR_RE), expected);
+    });
+  }
 });
