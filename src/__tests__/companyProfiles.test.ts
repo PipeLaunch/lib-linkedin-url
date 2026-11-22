@@ -304,7 +304,7 @@ describe("isNumericCompanyLinkedInProfileUrl", () => {
 });
 
 describe("isNumericCompanyLinkedInProfileUrl with percent-encoded digits", () => {
-  // since 2.1.0 the slug is decoded first, so an encoded numeric ID is numeric
+  // since 3.0.0 the slug is decoded first, so an encoded numeric ID is numeric
   it("treats /company/%31%30%33%35 as numeric", () => {
     assert.equal(
       isNumericCompanyLinkedInProfileUrl("linkedin.com/company/%31%30%33%35"),
