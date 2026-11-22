@@ -23,16 +23,61 @@ const PCT = String.raw`%[0-9a-f]{2}`;
  * separator punctuation and percent-encoded UTF-8 bytes, so only the character
  * set is validated here, not the length.
  */
-const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|[\p{L}\p{M}\p{Nd}&'._-])*`;
+/**
+ * Combining marks allowed in a slug: every `\p{M}` except the variation
+ * selectors U+FE0E/U+FE0F. Those only switch the text/emoji presentation of
+ * the character before them (`❤️`, `©️`), carry no letter of their own and are
+ * invisible, so they stay percent-encoded and are rejected literally.
+ */
+const MARK = String.raw`(?![︎️])\p{M}`;
+
+/** One character allowed after the first unit of a legacy `/pub/` slug. */
+const SLUG_CHAR = String.raw`(?:[\p{L}\p{Nd}&'._-]|${MARK})`;
+
+const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${SLUG_CHAR})*`;
+
+/** A whole, already normalized legacy `/pub/` slug (see `normalizeSlug`). */
+export const PUB_SLUG_RE = new RegExp(String.raw`^(?:${SLUG})$`, "iu");
+
+/** A single decoded code point that may appear literally in a legacy `/pub/` slug. */
+export const PUB_SLUG_CHAR_RE = new RegExp(String.raw`^${SLUG_CHAR}$`, "u");
+
+/**
+ * The symbols allowed in a person, company or school slug: the marks LinkedIn
+ * issues in credential-style slugs (`cima®`, `acme™`, `acme©`, `acme℠`,
+ * `360°`). An allow-list on purpose: the rest of `\p{S}` holds emoji,
+ * slash-lookalikes (`∕`, `⁄`, `⫽`, `⌿`) and lookalikes of ASCII characters
+ * (`＜`, `˜`, `´`) that would let one slug pass for another. Any other symbol
+ * is rejected literally and stays percent-encoded.
+ */
+const SYMBOL = String.raw`[©®°℠™]`;
+
+/** One character allowed after the first unit of a person, company or school slug. */
+const PROFILE_SLUG_CHAR = String.raw`(?:[\p{L}\p{Nd}&'._~-]|${MARK}|${SYMBOL})`;
 
 /**
  * A person, company or school slug: like {@link SLUG}, but it may also contain
- * `~` and may start with any run of `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`,
- * `/in/jane~doe` are all live profiles). At least one letter, digit or
- * percent-escape is still required, so `/in/-` or `/company/~` are rejected.
+ * `~` and the symbols in {@link SYMBOL} (`/in/jane-doe-cfa®`), and may start
+ * with any run of `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`, `/in/jane~doe` are
+ * all live profiles). The first unit after that run must be a letter, digit or
+ * percent-escape, so `/in/-`, `/in/®`, `/in/-®-` and `/company/~` are rejected.
+ * After normalization only an undecodable escape may come first (see
+ * `hasValidFirstUnit` in entity.ts).
  * The legacy `/pub/` format keeps the stricter {@link SLUG}.
  */
-const PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|[\p{L}\p{M}\p{Nd}&'._~-])*`;
+const PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${PROFILE_SLUG_CHAR})*`;
+
+/** A whole, already normalized person/company/school slug (see `normalizeSlug`). */
+export const PROFILE_SLUG_RE = new RegExp(
+  String.raw`^(?:${PROFILE_SLUG})$`,
+  "iu",
+);
+
+/** A single decoded code point that may appear literally in a person/company/school slug. */
+export const PROFILE_SLUG_CHAR_RE = new RegExp(
+  String.raw`^(?:${PROFILE_SLUG_CHAR})$`,
+  "u",
+);
 
 /** The slug must fill a whole path segment: only `/`, `?`, `#` or the end may follow it. */
 const AFTER_SLUG = String.raw`(?=[/?#]|$)`;

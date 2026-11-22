@@ -5,6 +5,85 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-11-22
+
+Released as a minor version: `extract*` and `generateCanonical*` return a
+different string for some inputs (decoded slugs, uppercase escape hex), and a
+few previously valid URLs are now rejected. See **Changed** below before
+upgrading if you store or compare these values.
+
+### Fixed
+
+- Person, company and school slugs may contain the symbols `©`, `®`, `°`,
+  `℠` and `™` after the first character, e.g.
+  `/in/adam-hirsch-cima®-crpc®-6a2a9b3`; LinkedIn issues these and they were
+  previously rejected while the percent-encoded form passed. A slug must still
+  start (after any `-`/`~`) with a letter, digit or an escape that is not
+  valid UTF-8, so `/in/®` and `/in/-®-` stay invalid. This is an allow-list: every other
+  symbol, including emoji (`😀`, `❤`, flags), slash-lookalikes (`∕`, `⁄`,
+  `⫽`, `⌿`) and lookalikes of ASCII characters (`＜`, `˜`, `´`), is
+  rejected literally and stays percent-encoded when given encoded, so a
+  canonical URL never shows a fake path segment or one slug posing as
+  another. ASCII symbols, whitespace and control characters are still
+  rejected.
+
+### Changed
+
+- Raw and percent-encoded spellings of a person, company or school slug now
+  give the same result. `extract*` and `generateCanonical*` return the
+  decoded slug (`cima%C2%AE` -> `cima®`); escapes of characters that may not
+  appear literally are kept with uppercase hex (`%2F`, previously `%2f` in
+  canonical URLs). See "Slug normalization" in the README.
+- Consequently a slug is now rejected, like its raw form, when its first
+  character after any leading `-`/`~` is an escape that decodes to a
+  character that may not start a slug. These URLs were valid in 2.0.2:
+  - a symbol: `/in/%C2%AE`, `/in/%E2%84%A2jane`;
+  - `.`, `_`, `&` or `'`: `/in/%2Ejane`, `/in/%5Fjane`, `/in/%26jane`,
+    `/in/%27jane`;
+  - a combining mark: `/in/%CC%81jane`;
+  - a character that stays escaped because it may not appear literally at
+    all (space, `/`, an emoji, a lookalike symbol, U+FE0F): `/in/%20jane`,
+    `/in/%2Fjane`, `/in/%F0%9F%98%80`, `/in/%E2%88%95jane`.
+
+  Only an escape that is not valid UTF-8 (`/in/%FFjane`) may still start a
+  slug. The same applies to company and school slugs and to `/pub/` names.
+
+- The variation selectors U+FE0E and U+FE0F (invisible; they only pick the
+  text or emoji look of the previous character, as in `❤️` or `©️`) are no
+  longer accepted literally as combining marks, in any slug including
+  `/pub/` names, and stay percent-encoded when given encoded:
+  `/in/jane%E2%9D%A4%EF%B8%8F` canonicalizes with both characters escaped.
+  `/in/jane\uFE0F` was valid in 2.0.2.
+- `isNumericCompanyLinkedInProfileUrl()` reads the decoded slug, so a
+  percent-encoded numeric ID now counts as numeric:
+  `/company/%31%30%33%35` returns `true` (it returned `false` in 2.0.2) and
+  canonicalizes to `https://linkedin.com/company/1035`.
+- Slugs are put in Unicode NFC (outside percent-escapes), so composed and
+  decomposed accents give the same slug: `/in/café`, `/in/cafe%CC%81` and
+  a raw `cafe` + U+0301 all extract `café` (composed) and canonicalize to
+  `https://linkedin.com/in/café`. In 2.0.2 the decomposed forms returned
+  different strings. This applies to company, school and `/pub/` slugs too.
+- Slugs longer than 2048 characters (as written in the URL, escapes
+  included) are rejected, for person, company, school and `/pub/` URLs.
+  LinkedIn names are at most 100 characters (1200 fully percent-encoded).
+  The limit bounds the cost of NFC, which is quadratic on long runs of
+  combining marks: a crafted 80 000-character slug took seconds to
+  validate and is now rejected in milliseconds.
+  The limit also applies to the decoded slug and to its lowercased canonical
+  form, since NFC and lowercasing can lengthen a slug (U+0344 becomes two
+  characters, `İ` lowercases to two): a slug is rejected unless both fit, so
+  every canonical URL is itself valid and canonicalizes to itself. 2.0.2 had
+  no limit.
+- Bytes that are not valid UTF-8 stay escaped one by one and do not stop
+  their neighbours from decoding: `jane%C2%AE%FF` and `jane®%FF` both give
+  `jane®%FF`, and `/in/%C2%AE%FF` is rejected like `/in/®%FF`.
+- Legacy `/pub/` names (`{ numeric: true }`) get the same normalization
+  against their own character set (unchanged except for U+FE0E/U+FE0F):
+  `/pub/caf%C3%A9/1/2/3` extracts `café`, and `canonicalPubUrl` keeps uppercase hex for escapes it does not
+  decode (`%C2%AE`, previously lowercased to `%c2%ae`). A name whose
+  escapes decode to a character not allowed first (`/pub/%2Djane/1/2/3`) is
+  now rejected, like its raw form.
+
 ## [2.0.2] - 2026-11-17
 
 ### Fixed
@@ -125,6 +204,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
+[2.1.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v1.3.0...v2.0.0
