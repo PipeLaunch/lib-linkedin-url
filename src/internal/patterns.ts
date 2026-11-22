@@ -13,6 +13,25 @@ const HOST_PREFIX = String.raw`^https?:\/\/(?:(?:www|[a-z]{2})\.)?linkedin\.com\
 const PCT = String.raw`%[0-9a-f]{2}`;
 
 /**
+ * Excludes the variation selectors U+FE0E/U+FE0F from the combining marks a
+ * slug may contain. They only switch the text/emoji presentation of the
+ * character before them (`❤` + U+FE0F, `©` + U+FE0F), carry no letter of their own and are
+ * invisible, so they stay percent-encoded and are rejected literally.
+ */
+const NOT_VARIATION_SELECTOR = String.raw`(?![\uFE0E\uFE0F])`;
+
+/*
+ * Each "one character" pattern below is a SINGLE character class, never an
+ * alternation of overlapping classes. Under the `iu` flags some code points
+ * match more than one property (U+0345 is both `\p{M}` and, case-folded,
+ * `\p{L}`); `(?:[\p{L}]|\p{M})*` then has 2^n ways to match n of them and
+ * backtracks exponentially on an invalid suffix (`a` + 25 x U+0345 + `!`).
+ */
+
+/** One character allowed after the first unit of a legacy `/pub/` slug. */
+const SLUG_CHAR = String.raw`${NOT_VARIATION_SELECTOR}[\p{L}\p{M}\p{Nd}&'._-]`;
+
+/**
  * A profile slug: starts with a letter or digit (any script) or a percent-escape,
  * and may continue with those plus combining marks (`\p{M}`: the vowel signs
  * and viramas of Devanagari, Thai, ... and decomposed accents), `&`, `'`, `.`,
@@ -23,17 +42,6 @@ const PCT = String.raw`%[0-9a-f]{2}`;
  * separator punctuation and percent-encoded UTF-8 bytes, so only the character
  * set is validated here, not the length.
  */
-/**
- * Combining marks allowed in a slug: every `\p{M}` except the variation
- * selectors U+FE0E/U+FE0F. Those only switch the text/emoji presentation of
- * the character before them (`❤️`, `©️`), carry no letter of their own and are
- * invisible, so they stay percent-encoded and are rejected literally.
- */
-const MARK = String.raw`(?![︎️])\p{M}`;
-
-/** One character allowed after the first unit of a legacy `/pub/` slug. */
-const SLUG_CHAR = String.raw`(?:[\p{L}\p{Nd}&'._-]|${MARK})`;
-
 const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${SLUG_CHAR})*`;
 
 /** A whole, already normalized legacy `/pub/` slug (see `normalizeSlug`). */
@@ -45,19 +53,20 @@ export const PUB_SLUG_CHAR_RE = new RegExp(String.raw`^${SLUG_CHAR}$`, "u");
 /**
  * The symbols allowed in a person, company or school slug: the marks LinkedIn
  * issues in credential-style slugs (`cima®`, `acme™`, `acme©`, `acme℠`,
- * `360°`). An allow-list on purpose: the rest of `\p{S}` holds emoji,
- * slash-lookalikes (`∕`, `⁄`, `⫽`, `⌿`) and lookalikes of ASCII characters
- * (`＜`, `˜`, `´`) that would let one slug pass for another. Any other symbol
- * is rejected literally and stays percent-encoded.
+ * `360°`): U+00A9, U+00AE, U+00B0, U+2120, U+2122. An allow-list on purpose:
+ * the rest of `\p{S}` holds emoji, slash-lookalikes (`∕`, `⁄`, `⫽`, `⌿`)
+ * and lookalikes of ASCII characters (`＜`, `˜`, `´`) that would let one
+ * slug pass for another. Any other symbol is rejected literally and stays
+ * percent-encoded. Used inside a character class, not as an alternative.
  */
-const SYMBOL = String.raw`[©®°℠™]`;
+const SYMBOL_CHARS = String.raw`\u00A9\u00AE\u00B0\u2120\u2122`;
 
 /** One character allowed after the first unit of a person, company or school slug. */
-const PROFILE_SLUG_CHAR = String.raw`(?:[\p{L}\p{Nd}&'._~-]|${MARK}|${SYMBOL})`;
+const PROFILE_SLUG_CHAR = String.raw`${NOT_VARIATION_SELECTOR}[\p{L}\p{M}\p{Nd}&'._~${SYMBOL_CHARS}-]`;
 
 /**
  * A person, company or school slug: like {@link SLUG}, but it may also contain
- * `~` and the symbols in {@link SYMBOL} (`/in/jane-doe-cfa®`), and may start
+ * `~` and the symbols in {@link SYMBOL_CHARS} (`/in/jane-doe-cfa®`), and may start
  * with any run of `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`, `/in/jane~doe` are
  * all live profiles). The first unit after that run must be a letter, digit or
  * percent-escape, so `/in/-`, `/in/®`, `/in/-®-` and `/company/~` are rejected.
