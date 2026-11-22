@@ -34,7 +34,7 @@ assert.equal(
   extractCompanyLinkedInProfileName(
     "https://www.linkedin.com/company/%C3%A0-nous-la-lune-",
   ),
-  "%C3%A0-nous-la-lune-",
+  "à-nous-la-lune-",
 );
 
 assert.equal(
