@@ -5,6 +5,28 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2026-11-22
+
+### Fixed
+
+- Person, company and school slugs may contain non-ASCII Unicode symbols
+  (`®`, `™`, `©`, `°`) after the first character, e.g.
+  `/in/adam-hirsch-cima®-crpc®-6a2a9b3`; LinkedIn issues these and they were
+  previously rejected while the percent-encoded form passed. A slug must still
+  start (after any `-`/`~`) with a letter, digit or percent-escape, so
+  `/in/®` and `/in/-®-` stay invalid. ASCII symbols, whitespace and control
+  characters are still rejected. The legacy `/pub/` format is unchanged.
+
+### Changed
+
+- Raw and percent-encoded spellings of a person, company or school slug now
+  give the same result. `extract*` and `generateCanonical*` return the
+  decoded slug (`cima%C2%AE` -> `cima®`); escapes of characters that may not
+  appear literally are kept with uppercase hex (`%2F`, previously `%2f` in
+  canonical URLs). See "Slug normalization" in the README.
+- Consequently a slug whose escapes decode to a symbol in first position
+  (`/in/%C2%AE`, `/in/%E2%84%A2jane`) is now rejected, like its raw form.
+
 ## [2.0.2] - 2026-11-17
 
 ### Fixed

@@ -206,3 +206,133 @@ describe("generateCanonicalLinkedInProfileUrl", () => {
     }
   });
 });
+
+describe("unicode symbols and percent-encoding", () => {
+  const ADAM = "adam-hirsch-cima®-crpc®-6a2a9b3";
+  const BRIAN = "brian-sweeney-mba-cfp®-ea-cepa-b2519724";
+  const TM = "jane-doe-acme™-lead";
+
+  // [url, extracted slug, canonical URL]
+  const cases: [url: string, slug: string, canonical: string][] = [
+    [
+      `https://www.linkedin.com/in/${ADAM}`,
+      ADAM,
+      `https://linkedin.com/in/${ADAM}`,
+    ],
+    [
+      "https://www.linkedin.com/in/adam-hirsch-cima%C2%AE-crpc%C2%AE-6a2a9b3",
+      ADAM,
+      `https://linkedin.com/in/${ADAM}`,
+    ],
+    [
+      "https://www.linkedin.com/in/adam-hirsch-cima%c2%ae-crpc%c2%ae-6a2a9b3/",
+      ADAM,
+      `https://linkedin.com/in/${ADAM}`,
+    ],
+    [
+      `https://www.linkedin.com/in/${BRIAN}`,
+      BRIAN,
+      `https://linkedin.com/in/${BRIAN}`,
+    ],
+    [
+      "https://www.linkedin.com/in/brian-sweeney-mba-cfp%C2%AE-ea-cepa-b2519724",
+      BRIAN,
+      `https://linkedin.com/in/${BRIAN}`,
+    ],
+    [`https://www.linkedin.com/in/${TM}`, TM, `https://linkedin.com/in/${TM}`],
+    [
+      "https://www.linkedin.com/in/jane-doe-acme%E2%84%A2-lead",
+      TM,
+      `https://linkedin.com/in/${TM}`,
+    ],
+    [
+      "https://linkedin.com/in/Jane-Doe-©°",
+      "Jane-Doe-©°",
+      "https://linkedin.com/in/jane-doe-©°",
+    ],
+    // escapes of characters that may not appear literally stay escaped, in uppercase
+    [
+      "https://linkedin.com/in/jane%20doe",
+      "jane%20doe",
+      "https://linkedin.com/in/jane%20doe",
+    ],
+    [
+      "https://linkedin.com/in/Jane%2fDoe",
+      "Jane%2FDoe",
+      "https://linkedin.com/in/jane%2Fdoe",
+    ],
+    [
+      "https://linkedin.com/in/jane%3cdoe",
+      "jane%3Cdoe",
+      "https://linkedin.com/in/jane%3Cdoe",
+    ],
+    // not valid UTF-8: kept as is
+    [
+      "https://linkedin.com/in/jane%ff",
+      "jane%FF",
+      "https://linkedin.com/in/jane%FF",
+    ],
+    // an escape of an allowed ASCII character is decoded
+    ["https://linkedin.com/in/%4Aane", "Jane", "https://linkedin.com/in/jane"],
+  ];
+  for (const [url, slug, canonical] of cases) {
+    it(`${url} -> "${slug}", "${canonical}"`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+      assert.equal(extractLinkedInProfileName(url), slug);
+      assert.equal(generateCanonicalLinkedInProfileUrl(url), canonical);
+    });
+    it(`${url}: parse -> canonical -> parse is stable`, () => {
+      assert.equal(isValidLinkedInProfileUrl(canonical), true);
+      assert.equal(generateCanonicalLinkedInProfileUrl(canonical), canonical);
+      assert.equal(
+        extractLinkedInProfileName(canonical),
+        canonical.slice("https://linkedin.com/in/".length),
+      );
+    });
+  }
+
+  const invalid = [
+    "https://linkedin.com/in/®",
+    "https://linkedin.com/in/-®-",
+    "https://linkedin.com/in/®jane",
+    "https://linkedin.com/in/jane doe®",
+    "https://linkedin.com/in/jane®%",
+    // the encoded spellings are rejected just like the raw ones
+    "https://linkedin.com/in/%C2%AE",
+    "https://linkedin.com/in/-%C2%AE-",
+    "https://linkedin.com/in/%E2%84%A2jane",
+    // ASCII symbols are still rejected
+    "https://linkedin.com/in/jane<doe>",
+    "https://linkedin.com/in/jane+doe",
+    "https://linkedin.com/in/jane=doe",
+    "https://linkedin.com/in/jane|doe",
+    // whitespace and control characters
+    "https://linkedin.com/in/jane doe",
+    "https://linkedin.com/in/jane\u0007doe",
+    "https://linkedin.com/in/jane\tdoe",
+  ];
+  for (const url of invalid) {
+    it(`rejects ${JSON.stringify(url)}`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url), false);
+      assert.equal(extractLinkedInProfileName(url), "");
+      assert.equal(generateCanonicalLinkedInProfileUrl(url), "");
+    });
+  }
+
+  // regression: live slugs that already passed keep passing
+  const regressions: [url: string, slug: string][] = [
+    ["https://www.linkedin.com/in/-sean-sheppard", "-sean-sheppard"],
+    ["https://www.linkedin.com/in/-yu-chun-lin", "-yu-chun-lin"],
+    ["https://www.linkedin.com/in/~janedoe", "~janedoe"],
+  ];
+  for (const [url, slug] of regressions) {
+    it(`still accepts ${url}`, () => {
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+      assert.equal(extractLinkedInProfileName(url), slug);
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(url),
+        `https://linkedin.com/in/${slug}`,
+      );
+    });
+  }
+});

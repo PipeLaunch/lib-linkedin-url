@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { addHttpsIfMissing, isNonEmptyString } from "../internal/util.ts";
 import { TLD_TABLE } from "../internal/tld.ts";
+import { canonicalSlug, normalizeSlug } from "../internal/entity.ts";
 
 describe("addHttpsIfMissing", () => {
   const cases: [url: string, expected: string][] = [
@@ -62,5 +63,31 @@ describe("TLD_TABLE integrity", () => {
     assert.equal(TLD_TABLE.de, "Germany");
     assert.equal(TLD_TABLE.uk, "United Kingdom");
     assert.equal(typeof TLD_TABLE.gb, "string");
+  });
+});
+
+describe("normalizeSlug", () => {
+  const cases: [slug: string, expected: string][] = [
+    ["Jane-Doe", "Jane-Doe"],
+    ["cima%C2%AE", "cima®"],
+    ["cima%c2%ae", "cima®"],
+    ["%E4%B8%AD%E5%9B%BD", "中国"],
+    ["a%20b", "a%20b"],
+    ["a%2fb", "a%2Fb"],
+    ["a%ff%C2%AE", "a%FF%C2%AE"],
+    ["a%C2%AE%20b", "a®%20b"],
+    ["%41b", "Ab"],
+  ];
+  for (const [slug, expected] of cases) {
+    it(`"${slug}" -> "${expected}" (and is a fixed point)`, () => {
+      assert.equal(normalizeSlug(slug), expected);
+      assert.equal(normalizeSlug(expected), expected);
+    });
+  }
+});
+
+describe("canonicalSlug", () => {
+  it("lowercases letters but keeps escapes uppercase", () => {
+    assert.equal(canonicalSlug("Jane%2FDoe-CFA®"), "jane%2Fdoe-cfa®");
   });
 });

@@ -46,6 +46,10 @@ describe("isValidCompanyLinkedInProfileUrl", () => {
     "https://www.linkedin.com/company/~acme",
     "https://www.linkedin.com/company/acme~corp/",
     "https://www.linkedin.com/school/-example-university-/",
+    // non-ASCII symbols after the first character
+    "https://www.linkedin.com/company/acme®-labs/",
+    "https://www.linkedin.com/company/acme%C2%AE-labs/",
+    "https://www.linkedin.com/school/example-college™",
   ];
   for (const url of valid) {
     it(`accepts ${url}`, () => {
@@ -137,15 +141,17 @@ describe("extractCompanyLinkedInProfileName", () => {
       "schwarz-&-partner-finanzkonsulenten-ag",
     ],
     ["https://www.linkedin.com/school/mit", "mit"],
-    // pinned behavior: unicode and percent-encoded forms round-trip verbatim (never equated)
+    // unicode and percent-encoded forms of a slug extract to the same decoded slug
     [
       "https://www.linkedin.com/company/中国投资有限责任公司/",
       "中国投资有限责任公司",
     ],
     [
       "https://cn.linkedin.com/company/%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8",
-      "%E4%B8%AD%E5%9B%BD%E6%8A%95%E8%B5%84%E6%9C%89%E9%99%90%E8%B4%A3%E4%BB%BB%E5%85%AC%E5%8F%B8",
+      "中国投资有限责任公司",
     ],
+    ["https://www.linkedin.com/company/Acme®-Labs/", "Acme®-Labs"],
+    ["https://www.linkedin.com/company/Acme%C2%AE-Labs/", "Acme®-Labs"],
     ["https://www.linkedin.com/company/", ""],
     ["https://www.linkedin.com/company//", ""],
     ["https://linkedin.com/in/test", ""],
@@ -190,6 +196,15 @@ describe("generateCanonicalCompanyLinkedInProfileUrl", () => {
     [
       "www.linkedin.com/company/Acme~Corp",
       "https://linkedin.com/company/acme~corp",
+    ],
+    // raw and percent-encoded symbols canonicalize to the same decoded slug
+    [
+      "https://www.linkedin.com/company/Acme®-Labs/",
+      "https://linkedin.com/company/acme®-labs",
+    ],
+    [
+      "https://www.linkedin.com/company/Acme%c2%ae-Labs/",
+      "https://linkedin.com/company/acme®-labs",
     ],
   ];
   for (const [url, expected] of cases) {

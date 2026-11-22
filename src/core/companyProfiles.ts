@@ -32,7 +32,9 @@ export function isValidSchoolLinkedInProfileUrl(url: string): boolean {
 
 /**
  * Extracts the company (or school) slug from a LinkedIn URL.
- * The slug is returned exactly as written in the URL (case preserved);
+ * Percent-escapes are decoded where the decoded character may appear in a
+ * slug (`cima%C2%AE` -> `cima®`), so raw and encoded URLs give the same
+ * slug; other escapes stay, with uppercase hex (`%20`). Case is preserved;
  * only {@link generateCanonicalCompanyLinkedInProfileUrl} lowercases.
  *
  * @param url - LinkedIn company or school URL, with or without protocol
@@ -62,7 +64,8 @@ export function isNumericCompanyLinkedInProfileUrl(url: string): boolean {
 
 /**
  * Builds the canonical URL of a LinkedIn company profile:
- * `https://linkedin.com/company/<slug>` with a lowercased slug.
+ * `https://linkedin.com/company/<slug>` with the decoded, lowercased slug
+ * (remaining percent-escapes keep uppercase hex).
  * School URLs keep their `/school/` path segment.
  *
  * @param url - LinkedIn company or school URL, with or without protocol
@@ -81,7 +84,8 @@ export function generateCanonicalCompanyLinkedInProfileUrl(
 
 /**
  * Builds the canonical URL of a LinkedIn school profile:
- * `https://linkedin.com/school/<slug>` with a lowercased slug.
+ * `https://linkedin.com/school/<slug>` with the decoded, lowercased slug
+ * (remaining percent-escapes keep uppercase hex).
  *
  * @param url - LinkedIn school URL, with or without protocol
  * @param options - `keepTld` keeps the country subdomain (`www` when there is none)

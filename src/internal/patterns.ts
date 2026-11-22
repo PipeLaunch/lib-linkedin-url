@@ -26,13 +26,36 @@ const PCT = String.raw`%[0-9a-f]{2}`;
 const SLUG = String.raw`(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|[\p{L}\p{M}\p{Nd}&'._-])*`;
 
 /**
+ * A non-ASCII Unicode symbol (`\p{S}`: `®`, `™`, `©`, `°`, ...). ASCII symbols
+ * (`<`, `>`, `+`, `=`, `|`, `^`, `` ` ``, `$`) stay rejected: LinkedIn never puts
+ * them in a slug, and `<`/`>` would let markup through.
+ */
+const SYMBOL = String.raw`[^\P{S}\x00-\x7f]`;
+
+/** One character allowed after the first unit of a person, company or school slug. */
+const PROFILE_SLUG_CHAR = String.raw`[\p{L}\p{M}\p{Nd}&'._~-]|${SYMBOL}`;
+
+/**
  * A person, company or school slug: like {@link SLUG}, but it may also contain
- * `~` and may start with any run of `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`,
- * `/in/jane~doe` are all live profiles). At least one letter, digit or
- * percent-escape is still required, so `/in/-` or `/company/~` are rejected.
+ * `~` and non-ASCII symbols (`/in/jane-doe-cfa®`), and may start with any run of
+ * `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`, `/in/jane~doe` are all live
+ * profiles). The first unit after that run must be a letter, digit or
+ * percent-escape, so `/in/-`, `/in/®`, `/in/-®-` and `/company/~` are rejected.
  * The legacy `/pub/` format keeps the stricter {@link SLUG}.
  */
-const PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|[\p{L}\p{M}\p{Nd}&'._~-])*`;
+const PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${PROFILE_SLUG_CHAR})*`;
+
+/** A whole, already normalized person/company/school slug (see `normalizeSlug`). */
+export const PROFILE_SLUG_RE = new RegExp(
+  String.raw`^(?:${PROFILE_SLUG})$`,
+  "iu",
+);
+
+/** A single decoded code point that may appear literally in a person/company/school slug. */
+export const PROFILE_SLUG_CHAR_RE = new RegExp(
+  String.raw`^(?:${PROFILE_SLUG_CHAR})$`,
+  "u",
+);
 
 /** The slug must fill a whole path segment: only `/`, `?`, `#` or the end may follow it. */
 const AFTER_SLUG = String.raw`(?=[/?#]|$)`;

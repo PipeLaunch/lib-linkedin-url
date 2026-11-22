@@ -32,7 +32,9 @@ export function isValidLinkedInProfileUrl(
 
 /**
  * Extracts the profile slug from a LinkedIn person profile URL.
- * The slug is returned exactly as written in the URL (case preserved);
+ * Percent-escapes are decoded where the decoded character may appear in a
+ * slug (`cima%C2%AE` -> `cima®`), so raw and encoded URLs give the same
+ * slug; other escapes stay, with uppercase hex (`%20`). Case is preserved;
  * only {@link generateCanonicalLinkedInProfileUrl} lowercases.
  *
  * @param url - LinkedIn profile URL, with or without protocol
@@ -54,7 +56,8 @@ export function extractLinkedInProfileName(
 
 /**
  * Builds the canonical URL of a LinkedIn person profile:
- * `https://linkedin.com/in/<slug>` with a lowercased slug.
+ * `https://linkedin.com/in/<slug>` with the decoded, lowercased slug
+ * (remaining percent-escapes keep uppercase hex).
  *
  * @param url - LinkedIn profile URL, with or without protocol
  * @param options - `keepTld` keeps the country subdomain (`www` when there is none);
