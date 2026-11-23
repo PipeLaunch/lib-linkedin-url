@@ -1,6 +1,7 @@
 import {
   COMPANY_RE,
   DUPLICATED_RE,
+  INVISIBLE_ESCAPE_RE,
   PERSON_RE,
   PROFILE_SLUG_CHAR_RE,
   PROFILE_SLUG_RE,
@@ -234,6 +235,7 @@ export function matchEntityUrl(
   if (
     !PROFILE_SLUG_RE.test(slug) ||
     !hasValidFirstUnit(slug) ||
+    INVISIBLE_ESCAPE_RE.test(slug) ||
     !fitsLengthLimit(slug)
   ) {
     return null;

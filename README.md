@@ -191,6 +191,14 @@ library returns the **decoded** form:
   surrogates are **not** encoded: they still make the URL invalid, although
   an escape such as `%20` or `%2B` is accepted. Legacy `/pub/` names keep
   rejecting raw symbols;
+- since 3.1.1, a person, company or school slug that holds an invisible
+  format character, raw or encoded anywhere in the slug, is rejected: U+00AD
+  (soft hyphen), U+180E, U+200B, U+200E, U+200F, U+202A–U+202E,
+  U+2060–U+2064, U+2066–U+2069 and U+FEFF (`/in/jane%EF%BB%BFdoe` and a raw
+  `jane` + U+FEFF + `doe` are both invalid). ZWNJ (U+200C, used in Persian
+  and Indic names) and ZWJ (U+200D, inside emoji sequences) stay accepted
+  and are output as `%E2%80%8C` / `%E2%80%8D`. Legacy `/pub/` names are
+  unaffected;
 - a byte that is not valid UTF-8 is kept escaped on its own, and the bytes
   around it are still decoded: `jane%C2%AE%ff` -> `jane®%FF`;
 - validity is checked on the decoded slug, so an escape that decodes to a
@@ -226,7 +234,9 @@ the same way, against their stricter character set (no `~`, no symbols), so
   or `˜`) is accepted raw or percent-encoded but always output encoded
   (since 3.1.0; 3.0.0 rejected the raw form). A symbol in first position is
   rejected in both spellings. Raw ASCII symbols (`<`, `+`, `=`, `|`, ...)
-  and raw whitespace are never accepted.
+  and raw whitespace are never accepted, and neither are invisible format
+  characters such as U+200B or U+FEFF, raw or encoded (since 3.1.1; see
+  "Slug normalization" for the list).
 - Slugs longer than 2048 characters (escapes included) are rejected, to
   bound the cost of Unicode normalization.
 - The legacy `/pub/<name>/<id>/<id>/<id>` format is only recognized when
