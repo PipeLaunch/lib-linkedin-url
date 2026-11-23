@@ -69,7 +69,10 @@ describe("raw symbols are percent-encoded like their encoded spelling", () => {
       "joão-gabriel-procópio-santos-\u{1F1E7}\u{1F1F7}-\u{1F1EE}\u{1F1F9}-a7043245",
       "joão-gabriel-procópio-santos-%F0%9F%87%A7%F0%9F%87%B7-%F0%9F%87%AE%F0%9F%87%B9-a7043245",
     ],
-    ["sofia-heigis-♦️-00b9205", "sofia-heigis-%E2%99%A6%EF%B8%8F-00b9205"],
+    [
+      "sofia-heigis-♦\u{FE0F}-00b9205",
+      "sofia-heigis-%E2%99%A6%EF%B8%8F-00b9205",
+    ],
     ["pcb、pcba", "pcb%E3%80%81pcba"],
     [
       "robert-marking-\u{1F51C}miplondon-05b56513",
@@ -162,11 +165,10 @@ describe("raw symbols are percent-encoded like their encoded spelling", () => {
   });
 
   const MORE = [
-    "dev-\u{1F468}‍\u{1F4BB}-x", // ZWJ sequence, a format character included
-    "jane​doe", // zero-width space: a format character, not whitespace
-    "jane", // private use
+    "dev-\u{1F468}\u{200D}\u{1F4BB}-x", // ZWJ sequence, a format character included
+    "jane\u{E000}", // private use
     "jane-\u{1F44D}\u{1F3FB}", // skin tone modifier
-    "janeé́\u{1F51C}", // NFC still applies around the escape
+    "janeé\u{301}\u{1F51C}", // NFC still applies around the escape
     "~jane\u{1F51C}",
     "-jane-\u{1F51C}-",
     "1035\u{1F51C}",
@@ -210,7 +212,7 @@ describe("raw characters that are still rejected", () => {
     "-\u{1F51C}jane",
     "~∕jane",
     "∕jane",
-    "️jane",
+    "\u{FE0F}jane",
     "®jane",
   ];
   for (const slug of SAME) {
@@ -233,9 +235,9 @@ describe("raw characters that are still rejected", () => {
   // surrogates are left alone and still reject the URL, as in 3.0.0
   const RAW_REJECTED = [
     "jane doe",
-    "jane doe", // no-break space
-    "jane　doe", // ideographic space
-    "jane doe", // line separator
+    "jane\u{A0}doe", // no-break space
+    "jane\u{3000}doe", // ideographic space
+    "jane\u{2028}doe", // line separator
     "jane\u0085doe", // next line (C1 control)
     "jane\u0007doe",
     "jane\tdoe",
@@ -317,7 +319,7 @@ describe("the length limit applies to the encoded slug", () => {
   });
 
   it("an invalid suffix after many raw symbols and marks is rejected quickly", () => {
-    const url = `https://linkedin.com/in/a${"ͅ\u{1F51C}".repeat(150)}!`;
+    const url = `https://linkedin.com/in/a${"\u{345}\u{1F51C}".repeat(150)}!`;
     const start = performance.now();
     assert.equal(isValidLinkedInProfileUrl(url), false);
     assert.ok(performance.now() - start < 250);

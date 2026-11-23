@@ -115,6 +115,24 @@ export const PROFILE_SLUG_CHAR_RE = new RegExp(
   "u",
 );
 
+/**
+ * Finds an invisible format character in a normalized person, company or
+ * school slug: U+00AD (soft hyphen), U+180E, U+200B, U+200E/U+200F,
+ * U+202A-U+202E, U+2060-U+2064, U+2066-U+2069 or U+FEFF. A slug holding one
+ * is a copy-paste artefact, so it is rejected (since 3.1.1), raw or encoded.
+ * U+200C (ZWNJ, needed in Persian and Indic names) and U+200D (ZWJ, inside
+ * emoji sequences) stay allowed.
+ *
+ * None of these may appear literally in a slug, so after `normalizeSlug`
+ * each one is always its UTF-8 escape with uppercase hex, and every lead
+ * byte (`C2`, `E1`, `E2`, `EF`) is decoded on its own, so these escape
+ * texts only ever spell those characters. Matched on the escapes rather
+ * than on decoded text; literal alternatives that are tried once per
+ * position, with no repetition, so there is nothing to backtrack into.
+ */
+export const INVISIBLE_ESCAPE_RE =
+  /%(?:C2%AD|E1%A0%8E|E2%80%8[BEF]|E2%80%A[A-E]|E2%81%A[0-46-9]|EF%BB%BF)/;
+
 /** The slug must fill a whole path segment: only `/`, `?`, `#` or the end may follow it. */
 const AFTER_SLUG = String.raw`(?=[/?#]|$)`;
 

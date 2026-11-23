@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] - 2026-11-23
+
+### Fixed
+
+- A person, company or school slug that holds an invisible format character
+  is rejected again: 3.1.0 accepted the raw form (`/in/jane` + U+FEFF +
+  `doe` gave `jane%EF%BB%BFdoe`). The encoded spelling, accepted since
+  3.0.0, is now rejected too (`/in/jane%EF%BB%BFdoe`, `/in/jane%E2%80%8Bdoe`),
+  so both return `false` / `""` from every function. Such a slug is a
+  copy-paste artefact. The characters are U+00AD (soft hyphen), U+180E,
+  U+200B, U+200E, U+200F, U+202A–U+202E, U+2060–U+2064, U+2066–U+2069 and
+  U+FEFF, anywhere in the slug. ZWNJ (U+200C, used in Persian and Indic
+  names) and ZWJ (U+200D, inside emoji sequences) stay accepted, and legacy
+  `/pub/` names are unchanged.
+
 ## [3.1.0] - 2026-11-23
 
 ### Added
@@ -237,6 +252,7 @@ upgrading if you store or compare these values.
 
 - Initial release
 
+[3.1.1]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.2...v3.0.0
 [2.0.2]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.1...v2.0.2
