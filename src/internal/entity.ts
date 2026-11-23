@@ -201,6 +201,25 @@ function fitsLengthLimit(slug: string): boolean {
   );
 }
 
+/**
+ * Percent-encodes (UTF-8, uppercase hex) every raw non-ASCII code point of a
+ * person, company or school slug that may not appear literally in it
+ * (`jacky-jiang🔜` -> `jacky-jiang%F0%9F%94%9C`, `jane∕doe` ->
+ * `jane%E2%88%95doe`), so the raw spelling normalizes exactly like the
+ * encoded one. ASCII characters are left alone: the slug pattern already
+ * admits only the allowed ones. The slug pattern never captures whitespace,
+ * control characters or unpaired surrogates, so none reach this function.
+ *
+ * The {@link MAX_SLUG_LENGTH} check of {@link normalizeSlug} then applies to
+ * the encoded result; a longer input returns `""` before any encoding.
+ */
+function encodeRawSlugSymbols(slug: string): string {
+  if (slug.length > MAX_SLUG_LENGTH) return "";
+  return slug.replace(/[^\0-\x7F]/gu, (char) =>
+    PROFILE_SLUG_CHAR_RE.test(char) ? char : percentEncode(char),
+  );
+}
+
 /** Matches a LinkedIn profile URL of the given kind. Returns `null` when invalid. */
 export function matchEntityUrl(
   url: string,
@@ -211,7 +230,7 @@ export function matchEntityUrl(
   if (!match) return null;
   // Validate the normalized slug as well, so `/in/%C2%AE` and `/in/%20jane`
   // are rejected just like `/in/®` and `/in/ jane`.
-  const slug = normalizeSlug(match[2] ?? "");
+  const slug = normalizeSlug(encodeRawSlugSymbols(match[2] ?? ""));
   if (
     !PROFILE_SLUG_RE.test(slug) ||
     !hasValidFirstUnit(slug) ||

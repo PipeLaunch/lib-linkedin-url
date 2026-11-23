@@ -460,45 +460,81 @@ describe("symbol allow-list: emoji, lookalikes and variation selectors", () => {
     });
   }
 
-  const rejected = [
+  // Since 3.1.0 every other non-ASCII symbol is percent-encoded when given
+  // raw, so it gives exactly the result of its encoded spelling and never
+  // appears literally in the output (no lookalike or fake path segment).
+  const encodedRaw: [prefix: string, slug: string][] = [
     // slash-lookalikes: one slug would read as two path segments
-    "https://linkedin.com/in/jane\u2215doe", // ∕ division slash
-    "https://linkedin.com/in/jane\u2044doe", // ⁄ fraction slash
-    "https://linkedin.com/in/jane\u2216doe", // ∖ set minus
-    "https://linkedin.com/in/jane\u29f8doe", // ⧸ big solidus
-    "https://linkedin.com/in/jane\u2571doe", // ╱ box-drawing diagonal
+    ["https://linkedin.com/in/", "jane\u2215doe"], // ∕ division slash
+    ["https://linkedin.com/in/", "jane\u2044doe"], // ⁄ fraction slash
+    ["https://linkedin.com/in/", "jane\u2216doe"], // ∖ set minus
+    ["https://linkedin.com/in/", "jane\u29f8doe"], // ⧸ big solidus
+    ["https://linkedin.com/in/", "jane\u2571doe"], // ╱ box-drawing diagonal
     // emoji
-    "https://linkedin.com/in/jane\u{1F600}", // 😀
-    "https://linkedin.com/in/jane\u2764", // ❤
-    "https://linkedin.com/in/jane\u{1F1FA}\u{1F1F8}", // 🇺🇸
-    "https://linkedin.com/in/jane\u{1F44D}\u{1F3FB}", // 👍🏻
-    "https://www.linkedin.com/company/acme\u{1F680}", // 🚀
+    ["https://linkedin.com/in/", "jane\u{1F600}"], // 😀
+    ["https://linkedin.com/in/", "jane\u2764"], // ❤
+    ["https://linkedin.com/in/", "jane\u{1F1FA}\u{1F1F8}"], // 🇺🇸
+    ["https://linkedin.com/in/", "jane\u{1F44D}\u{1F3FB}"], // 👍🏻
+    ["https://www.linkedin.com/company/", "acme\u{1F680}"], // 🚀
     // slash-lookalikes outside any deny-list
-    "https://linkedin.com/in/jane\u2AFDdoe", // ⫽ double solidus operator
-    "https://linkedin.com/in/jane\u233Fdoe", // ⌿ APL slash bar
-    "https://linkedin.com/in/jane\u{1F67C}doe", // 🙼 very heavy solidus
+    ["https://linkedin.com/in/", "jane\u2AFDdoe"], // ⫽ double solidus operator
+    ["https://linkedin.com/in/", "jane\u233Fdoe"], // ⌿ APL slash bar
+    ["https://linkedin.com/in/", "jane\u{1F67C}doe"], // 🙼 very heavy solidus
     // lookalikes of ASCII characters
-    "https://linkedin.com/in/jane\uFF1Cx", // ＜ fullwidth <
-    "https://linkedin.com/in/jane\uFE64x", // ﹤ small <
-    "https://linkedin.com/in/jane\u02C2x", // ˂ modifier <
-    "https://linkedin.com/in/jane\u02DCx", // ˜ looks like ~
-    "https://linkedin.com/in/jane\u00B4x", // ´ looks like '
-    // other symbols are no longer accepted
-    "https://linkedin.com/in/jane-doe-€uro",
+    ["https://linkedin.com/in/", "jane\uFF1Cx"], // ＜ fullwidth <
+    ["https://linkedin.com/in/", "jane\uFE64x"], // ﹤ small <
+    ["https://linkedin.com/in/", "jane\u02C2x"], // ˂ modifier <
+    ["https://linkedin.com/in/", "jane\u02DCx"], // ˜ looks like ~
+    ["https://linkedin.com/in/", "jane\u00B4x"], // ´ looks like '
+    // other symbols
+    ["https://linkedin.com/in/", "jane-doe-€uro"],
     // variation selectors: invisible, emoji/text presentation only
-    "https://linkedin.com/in/jane\uFE0F",
-    "https://linkedin.com/in/jane\uFE0E",
-    "https://linkedin.com/in/acme\u00A9\uFE0F", // © + U+FE0F
-    "https://linkedin.com/in/acme\u2122\uFE0F", // ™ + U+FE0F
+    ["https://linkedin.com/in/", "jane\uFE0F"],
+    ["https://linkedin.com/in/", "jane\uFE0E"],
+    ["https://linkedin.com/in/", "acme\u00A9\uFE0F"], // © + U+FE0F
+    ["https://linkedin.com/in/", "acme\u2122\uFE0F"], // ™ + U+FE0F
   ];
-  for (const url of rejected) {
-    it(`rejects ${JSON.stringify(url)}`, () => {
-      assert.equal(
-        isValidLinkedInProfileUrl(url) || isValidCompanyLinkedInProfileUrl(url),
-        false,
-      );
+  // ASCII, letters, marks, digits and the allowed symbols; never U+FE0E/U+FE0F
+  const LITERAL_OK =
+    /^(?:(?![\uFE0E\uFE0F])[\0-\x7F\p{L}\p{M}\p{Nd}\u00A9\u00AE\u00B0\u2120\u2122])*$/u;
+  for (const [prefix, slug] of encodedRaw) {
+    const raw = `${prefix}${slug}`;
+    const encoded = `${prefix}${encodeURIComponent(slug)}`;
+    const isCompany = prefix.includes("/company/");
+    const canonicalOf = (url: string): string =>
+      isCompany
+        ? generateCanonicalCompanyLinkedInProfileUrl(url)
+        : generateCanonicalLinkedInProfileUrl(url);
+    it(`${JSON.stringify(raw)} gives the result of ${encoded}`, () => {
+      const canonical = canonicalOf(encoded);
+      assert.notEqual(canonical, "");
+      assert.equal(canonicalOf(raw), canonical);
+      assert.equal(canonicalOf(canonical), canonical);
+      assert.match(canonical.replace(/^.*\//, ""), LITERAL_OK);
+      if (isCompany) {
+        assert.equal(isValidCompanyLinkedInProfileUrl(raw), true);
+      } else {
+        assert.equal(isValidLinkedInProfileUrl(raw), true);
+        assert.equal(
+          extractLinkedInProfileName(raw),
+          extractLinkedInProfileName(encoded),
+        );
+      }
     });
   }
+
+  it("keeps a raw slash-lookalike as an escape: jane\u2215doe -> jane%E2%88%95doe", () => {
+    assert.equal(
+      generateCanonicalLinkedInProfileUrl(
+        "https://linkedin.com/in/jane\u2215doe",
+      ),
+      "https://linkedin.com/in/jane%E2%88%95doe",
+    );
+    assert.equal(
+      extractLinkedInProfileName("https://linkedin.com/in/Jane\u2215Doe/"),
+      "Jane%E2%88%95Doe",
+    );
+  });
 
   // encoded, they are valid but never decoded: the canonical URL keeps the escapes
   const kept: [url: string, canonical: string][] = [
