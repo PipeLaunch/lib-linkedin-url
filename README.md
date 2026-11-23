@@ -15,8 +15,9 @@ from regional subdomains.
   `/m/in/` and `/mwlite/in/` variants and the legacy numeric `/pub/` format
 - Handles URLs with or without protocol, uppercase hosts, query strings,
   hashes and extra path segments
-- Unicode slugs (letters, combining marks, digits and symbols such as `®`/`™`)
-  and percent-encoded slugs supported; both spellings normalize to one form
+- Unicode slugs (letters, combining marks, digits and symbols such as `®`/`™`,
+  emoji kept percent-encoded) and percent-encoded slugs supported; both
+  spellings normalize to one form
 - Zero runtime dependencies
 - Dual ESM + CommonJS builds, TypeScript types included
 - Never throws: invalid input returns `false` or `""`
@@ -178,6 +179,18 @@ library returns the **decoded** form:
 - any other escape (space, `/`, `?`, `<`, control characters, emoji,
   symbols outside `© ® ° ℠ ™`, the variation selectors U+FE0E/U+FE0F) is
   kept, written with **uppercase** hex: `jane%2fdoe` -> `jane%2Fdoe`;
+- since 3.1.0, in a person, company or school slug, a **raw** non-ASCII
+  character that may not appear literally (emoji, symbols outside
+  `© ® ° ℠ ™`, lookalikes, U+FE0E/U+FE0F) is percent-encoded (UTF-8,
+  uppercase hex) instead of rejecting the URL, so it gives the same result
+  as its encoded spelling: `jacky-jiang🔜-xds` -> `jacky-jiang%F0%9F%94%9C-xds`.
+  A lookalike is never kept literally, raw or encoded: `jane∕doe` ->
+  `jane%E2%88%95doe`, so the output cannot pass for `jane/doe`. Raw ASCII
+  symbols (`<`, `+`, `=`, `|`, `!`, ...), a bare `%`, whitespace (including
+  non-ASCII spaces such as U+00A0), control characters and unpaired
+  surrogates are **not** encoded: they still make the URL invalid, although
+  an escape such as `%20` or `%2B` is accepted. Legacy `/pub/` names keep
+  rejecting raw symbols;
 - a byte that is not valid UTF-8 is kept escaped on its own, and the bytes
   around it are still decoded: `jane%C2%AE%ff` -> `jane®%FF`;
 - validity is checked on the decoded slug, so an escape that decodes to a
@@ -210,8 +223,10 @@ the same way, against their stricter character set (no `~`, no symbols), so
   with a letter, digit or an escape that is not valid UTF-8. After that the
   only symbols allowed literally are `©`, `®`, `°`, `℠` and `™`; any other
   symbol (emoji, slash-lookalikes such as `∕` or `⁄`, lookalikes such as `＜`
-  or `˜`) is only accepted percent-encoded and stays encoded. ASCII symbols
-  (`<`, `+`, `=`, `|`, ...) and whitespace never.
+  or `˜`) is accepted raw or percent-encoded but always output encoded
+  (since 3.1.0; 3.0.0 rejected the raw form). A symbol in first position is
+  rejected in both spellings. Raw ASCII symbols (`<`, `+`, `=`, `|`, ...)
+  and raw whitespace are never accepted.
 - Slugs longer than 2048 characters (escapes included) are rejected, to
   bound the cost of Unicode normalization.
 - The legacy `/pub/<name>/<id>/<id>/<id>` format is only recognized when
@@ -235,7 +250,8 @@ names, signatures and options are unchanged. What changed:
 - **Newly rejected URLs**: a slug whose first character (after any `-`/`~`)
   is an escape that decodes to a character that may not start a slug, or
   that stays escaped (`/in/%C2%AE`, `/in/%2Ejane`, `/in/%20jane`); a raw
-  U+FE0E/U+FE0F; slugs longer than 2048 characters.
+  U+FE0E/U+FE0F (accepted again since 3.1.0, output as `%EF%B8%8F`); slugs
+  longer than 2048 characters.
 - `isNumericCompanyLinkedInProfileUrl()` treats a percent-encoded numeric
   ID (`/company/%31%30%33%35`) as numeric.
 

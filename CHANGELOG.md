@@ -5,6 +5,38 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-11-23
+
+### Added
+
+- A raw non-ASCII character that may not appear literally in a person,
+  company or school slug (emoji, symbols other than `©`, `®`, `°`, `℠` and
+  `™`, lookalikes, the variation selectors U+FE0E/U+FE0F) is now
+  percent-encoded (UTF-8, uppercase hex) instead of making the URL invalid,
+  so the raw and the encoded spelling give the same result from every
+  function. Live profiles such as `/in/jacky-jiang🔜-xds-796861111`,
+  `/in/sofia-heigis-♦️-00b9205` and `/in/pcb、pcba` extract
+  `jacky-jiang%F0%9F%94%9C-xds-796861111`, `sofia-heigis-%E2%99%A6%EF%B8%8F-00b9205`
+  and `pcb%E3%80%81pcba`, exactly as their encoded URLs did in 3.0.0.
+
+### Changed
+
+- `isValidLinkedInProfileUrl()`, `isValidCompanyLinkedInProfileUrl()` and
+  `isValidSchoolLinkedInProfileUrl()` now accept URLs they rejected in 3.0.0:
+  those whose slug holds such a raw character after its first unit, and
+  `extract*` / `generateCanonical*` return a slug for them instead of `""`.
+  Results for URLs that 3.0.0 accepted are unchanged.
+- Lookalikes stay safe: the character is never kept literally, only as an
+  escape in the output (`/in/jane∕doe` -> `jane%E2%88%95doe`), so a slug
+  still cannot pass for another one or show a fake path segment.
+- Still rejected, as in 3.0.0: a raw symbol as the first unit (`/in/🔜-x`,
+  rejected in its encoded form too); raw ASCII symbols (`<`, `+`, `=`, `|`,
+  `!`, ...), a bare `%`, whitespace (including non-ASCII spaces such as
+  U+00A0 and U+3000), control characters and unpaired surrogates, which are
+  not encoded although their escapes (`%2B`, `%20`) are accepted; and raw
+  symbols in legacy `/pub/` names. The 2048-character limit applies to the
+  slug after encoding, as it does to the encoded spelling.
+
 ## [3.0.0] - 2026-11-22
 
 A major release: no API was removed, but `extract*` and `generateCanonical*`
@@ -205,6 +237,7 @@ upgrading if you store or compare these values.
 
 - Initial release
 
+[3.1.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.2...v3.0.0
 [2.0.2]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.0...v2.0.1

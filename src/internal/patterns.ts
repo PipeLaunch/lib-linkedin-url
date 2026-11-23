@@ -56,8 +56,12 @@ export const PUB_SLUG_CHAR_RE = new RegExp(String.raw`^${SLUG_CHAR}$`, "u");
  * `360°`): U+00A9, U+00AE, U+00B0, U+2120, U+2122. An allow-list on purpose:
  * the rest of `\p{S}` holds emoji, slash-lookalikes (`∕`, `⁄`, `⫽`, `⌿`)
  * and lookalikes of ASCII characters (`＜`, `˜`, `´`) that would let one
- * slug pass for another. Any other symbol is rejected literally and stays
- * percent-encoded. Used inside a character class, not as an alternative.
+ * slug pass for another. No other symbol is ever kept literally: given
+ * encoded, it stays percent-encoded; since 3.1.0 a raw non-ASCII one is
+ * percent-encoded too (see {@link RAW_PROFILE_SLUG_CHAR}), so `jane∕doe`
+ * gives `jane%E2%88%95doe` and no output shows the lookalike itself. Raw
+ * ASCII symbols are not encoded: they are still rejected.
+ * Used inside a character class, not as an alternative.
  */
 const SYMBOL_CHARS = String.raw`\u00A9\u00AE\u00B0\u2120\u2122`;
 
@@ -76,6 +80,29 @@ const PROFILE_SLUG_CHAR = String.raw`${NOT_VARIATION_SELECTOR}[\p{L}\p{M}\p{Nd}&
  */
 const PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${PROFILE_SLUG_CHAR})*`;
 
+/**
+ * One character after the first unit of a person, company or school slug as
+ * written in the URL, before normalization: a {@link PROFILE_SLUG_CHAR}, or any
+ * other non-ASCII code point (U+FE0E/U+FE0F included) that is not whitespace,
+ * a control character or an unpaired surrogate. `encodeRawSlugSymbols` in
+ * entity.ts then percent-encodes each one {@link PROFILE_SLUG_CHAR} does not
+ * admit, so a raw `🔜` gives the same slug as `%F0%9F%94%9C`. Raw ASCII
+ * symbols, whitespace (non-ASCII spaces such as U+00A0 and U+3000 included),
+ * control characters and unpaired surrogates still end the match, so the URL
+ * stays rejected. One character class behind a negative lookahead:
+ * `\u0080-\u{10FFFF}` overlaps `\p{L}`, but overlap inside a single class
+ * does not backtrack.
+ */
+const RAW_PROFILE_SLUG_CHAR = String.raw`(?![\p{White_Space}\p{Cc}\p{Cs}])[\p{L}\p{M}\p{Nd}&'._~\u0080-\u{10FFFF}-]`;
+
+/**
+ * A person, company or school slug as written in the URL: {@link PROFILE_SLUG}
+ * with {@link RAW_PROFILE_SLUG_CHAR} after the first unit. The first unit is
+ * unchanged, so a raw symbol there (`/in/🔜-x`, `/in/-🔜`) is rejected, like
+ * its encoded form.
+ */
+const RAW_PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${RAW_PROFILE_SLUG_CHAR})*`;
+
 /** A whole, already normalized person/company/school slug (see `normalizeSlug`). */
 export const PROFILE_SLUG_RE = new RegExp(
   String.raw`^(?:${PROFILE_SLUG})$`,
@@ -93,19 +120,19 @@ const AFTER_SLUG = String.raw`(?=[/?#]|$)`;
 
 /** Person profiles: `/in/<slug>`, including the mobile `/m/in/` and `/mwlite/in/` variants. */
 export const PERSON_RE = new RegExp(
-  String.raw`${HOST_PREFIX}(?:mwlite\/|m\/)?(in)\/(${PROFILE_SLUG})${AFTER_SLUG}`,
+  String.raw`${HOST_PREFIX}(?:mwlite\/|m\/)?(in)\/(${RAW_PROFILE_SLUG})${AFTER_SLUG}`,
   "iu",
 );
 
 /** Companies: `/company/<slug>`. Also accepts `/school/` (long-standing behavior of the company validator). */
 export const COMPANY_RE = new RegExp(
-  String.raw`${HOST_PREFIX}(company|school)\/(${PROFILE_SLUG})${AFTER_SLUG}`,
+  String.raw`${HOST_PREFIX}(company|school)\/(${RAW_PROFILE_SLUG})${AFTER_SLUG}`,
   "iu",
 );
 
 /** Schools only: `/school/<slug>`. */
 export const SCHOOL_RE = new RegExp(
-  String.raw`${HOST_PREFIX}(school)\/(${PROFILE_SLUG})${AFTER_SLUG}`,
+  String.raw`${HOST_PREFIX}(school)\/(${RAW_PROFILE_SLUG})${AFTER_SLUG}`,
   "iu",
 );
 
