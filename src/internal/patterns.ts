@@ -65,6 +65,45 @@ export const PUB_SLUG_CHAR_RE = new RegExp(String.raw`^${SLUG_CHAR}$`, "u");
  */
 const SYMBOL_CHARS = String.raw`\u00A9\u00AE\u00B0\u2120\u2122`;
 
+/**
+ * The letter-like symbols that may also start a person, company or school
+ * slug (since 3.1.2): the circled, parenthesized, squared and negative
+ * letters and digits that "fancy text" generators produce. They are `\p{So}`
+ * or `\p{No}`, not `\p{L}`/`\p{Nd}`, but each stands for one letter or
+ * digit, and real slugs are made of them. An example that 3.0.0-3.1.1
+ * rejected:
+ * `https://www.linkedin.com/in/%E2%93%9E%E2%93%A1%E2%93%90-%E2%93%93%E2%93%9E%E2%93%94-123456789/`
+ * (`ⓞⓡⓐ-ⓓⓞⓔ-123456789`).
+ *
+ * - U+2460-U+24FF, the whole Enclosed Alphanumerics block: `①`, `⑴`, `⒈`,
+ *   `⒜`, `Ⓐ`, `ⓐ`, `⓪`, `⓫`, `⓵`;
+ * - from Enclosed Alphanumeric Supplement, only the single digit and A-Z
+ *   forms: U+1F100-U+1F10C (digit full stop/comma, circled sans-serif
+ *   zero), U+1F110-U+1F129 (parenthesized `🄐`), U+1F130-U+1F149 (squared
+ *   `🄰`), U+1F150-U+1F169 (negative circled `🅐`), U+1F170-U+1F189
+ *   (negative squared `🅰`).
+ *
+ * Left out: the rest of the supplement, i.e. the circled italic C and R
+ * (lookalikes of `©` and `®`), the raised MC/MD/MR marks, the squared
+ * abbreviations and words (`🆑`, `🆒`, `🆗`: mostly emoji), and the regional
+ * indicators U+1F1E6-U+1F1FF: two in a row render as a flag (`🇩🇪`), so
+ * they are emoji, not letters, and an emoji still may not come first.
+ *
+ * Only the first unit changes. Like any symbol outside {@link SYMBOL_CHARS},
+ * these are never kept literally: raw or encoded, each one is a
+ * percent-escape in the output (`/in/ⓞx` gives `%E2%93%9Ex`, as `/in/xⓞ`
+ * already gave `x%E2%93%9E`), which `hasValidFirstUnit` in entity.ts accepts
+ * through {@link LETTERLIKE_FIRST_CHAR_RE}. Used inside a character class,
+ * not as an alternative.
+ */
+const LETTERLIKE_FIRST_CHARS = String.raw`①-⓿\u{1F100}-\u{1F10C}\u{1F110}-\u{1F129}\u{1F130}-\u{1F149}\u{1F150}-\u{1F169}\u{1F170}-\u{1F189}`;
+
+/** A single decoded code point that may start a person/company/school slug as an escape. */
+export const LETTERLIKE_FIRST_CHAR_RE = new RegExp(
+  String.raw`^[${LETTERLIKE_FIRST_CHARS}]$`,
+  "u",
+);
+
 /** One character allowed after the first unit of a person, company or school slug. */
 const PROFILE_SLUG_CHAR = String.raw`${NOT_VARIATION_SELECTOR}[\p{L}\p{M}\p{Nd}&'._~${SYMBOL_CHARS}-]`;
 
@@ -74,8 +113,9 @@ const PROFILE_SLUG_CHAR = String.raw`${NOT_VARIATION_SELECTOR}[\p{L}\p{M}\p{Nd}&
  * with any run of `-`/`~` (`/in/-jane-doe-`, `/in/~janedoe`, `/in/jane~doe` are
  * all live profiles). The first unit after that run must be a letter, digit or
  * percent-escape, so `/in/-`, `/in/®`, `/in/-®-` and `/company/~` are rejected.
- * After normalization only an undecodable escape may come first (see
- * `hasValidFirstUnit` in entity.ts).
+ * After normalization only an undecodable escape, or the escape of one of
+ * the {@link LETTERLIKE_FIRST_CHARS}, may come first (see `hasValidFirstUnit`
+ * in entity.ts).
  * The legacy `/pub/` format keeps the stricter {@link SLUG}.
  */
 const PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${PROFILE_SLUG_CHAR})*`;
@@ -97,11 +137,14 @@ const RAW_PROFILE_SLUG_CHAR = String.raw`(?![\p{White_Space}\p{Cc}\p{Cs}])[\p{L}
 
 /**
  * A person, company or school slug as written in the URL: {@link PROFILE_SLUG}
- * with {@link RAW_PROFILE_SLUG_CHAR} after the first unit. The first unit is
- * unchanged, so a raw symbol there (`/in/🔜-x`, `/in/-🔜`) is rejected, like
- * its encoded form.
+ * with {@link RAW_PROFILE_SLUG_CHAR} after the first unit. The first unit may
+ * also be one of the {@link LETTERLIKE_FIRST_CHARS} (`/in/ⓞⓡⓐ`); any other
+ * raw symbol there (`/in/🔜-x`, `/in/-🔜`, `/in/®`) is rejected, like its
+ * encoded form. The first unit is still matched exactly once, by a single
+ * character class that does not overlap `%` or `[~-]`, so it adds no
+ * backtracking.
  */
-const RAW_PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}])(?:${PCT}|${RAW_PROFILE_SLUG_CHAR})*`;
+const RAW_PROFILE_SLUG = String.raw`[~-]*(?:${PCT}|[\p{L}\p{Nd}${LETTERLIKE_FIRST_CHARS}])(?:${PCT}|${RAW_PROFILE_SLUG_CHAR})*`;
 
 /** A whole, already normalized person/company/school slug (see `normalizeSlug`). */
 export const PROFILE_SLUG_RE = new RegExp(

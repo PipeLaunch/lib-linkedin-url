@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.2] - 2026-11-24
+
+### Fixed
+
+- A person, company or school slug may start with a letter-like symbol
+  again, as in 2.x: a circled, parenthesized, squared or negative letter or
+  digit. 3.0.0–3.1.1 rejected slugs such as
+  `/in/ⓞⓡⓐ-ⓓⓞⓔ-123456789` in both spellings, because `ⓞ` is a
+  symbol (`\p{So}`), not a letter; the same circled letter after the first
+  unit was already accepted. Raw or encoded, it now extracts
+  `%E2%93%9E%E2%93%A1%E2%93%90-%E2%93%93%E2%93%9E%E2%93%94-123456789`:
+  these symbols are output percent-encoded, like any symbol outside
+  `© ® ° ℠ ™`, and escapes are not case-folded (`Ⓞ` stays `%E2%93%84`). The
+  set is U+2460–U+24FF (Enclosed Alphanumerics) and, from U+1F100–U+1F1FF,
+  only the digit and A–Z forms: U+1F100–U+1F10C, U+1F110–U+1F129,
+  U+1F130–U+1F149, U+1F150–U+1F169 and U+1F170–U+1F189. Every other symbol
+  in first position stays rejected: `®`, `©`, `°`, `™`, `℠`, emoji,
+  regional indicators (flags), lookalikes and invisible characters. Legacy
+  `/pub/` names are unchanged. Results for every other URL are unchanged.
+
 ## [3.1.1] - 2026-11-23
 
 ### Fixed
@@ -252,6 +272,7 @@ upgrading if you store or compare these values.
 
 - Initial release
 
+[3.1.2]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/PipeLaunch/lib-linkedin-url/compare/v2.0.2...v3.0.0

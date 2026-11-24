@@ -2,6 +2,7 @@ import {
   COMPANY_RE,
   DUPLICATED_RE,
   INVISIBLE_ESCAPE_RE,
+  LETTERLIKE_FIRST_CHAR_RE,
   PERSON_RE,
   PROFILE_SLUG_CHAR_RE,
   PROFILE_SLUG_RE,
@@ -170,12 +171,14 @@ function decodeSequenceAt(
  * escape that still decodes to a character is one that may not appear
  * literally (space, `/`, an emoji, a lookalike symbol, U+FE0F, ...). Such a
  * slug is rejected, exactly like its raw form; only an escape that is not
- * valid UTF-8 may start a slug.
+ * valid UTF-8, or one whose character `allowedEscaped` accepts (the
+ * letter-like `ⓞ` of a person, company or school slug), may start a slug.
  */
-function hasValidFirstUnit(slug: string): boolean {
+function hasValidFirstUnit(slug: string, allowedEscaped?: RegExp): boolean {
   const run = /^[~-]*((?:%[0-9a-f]{2})+)/i.exec(slug)?.[1];
   if (!run) return true;
-  return decodeSequenceAt(run.match(/%[0-9a-f]{2}/gi) ?? [], 0) === null;
+  const decoded = decodeSequenceAt(run.match(/%[0-9a-f]{2}/gi) ?? [], 0);
+  return decoded === null || (allowedEscaped?.test(decoded.char) ?? false);
 }
 
 /**
@@ -234,7 +237,7 @@ export function matchEntityUrl(
   const slug = normalizeSlug(encodeRawSlugSymbols(match[2] ?? ""));
   if (
     !PROFILE_SLUG_RE.test(slug) ||
-    !hasValidFirstUnit(slug) ||
+    !hasValidFirstUnit(slug, LETTERLIKE_FIRST_CHAR_RE) ||
     INVISIBLE_ESCAPE_RE.test(slug) ||
     !fitsLengthLimit(slug)
   ) {

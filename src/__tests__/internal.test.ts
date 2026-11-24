@@ -7,7 +7,11 @@ import {
   canonicalSlug,
   normalizeSlug,
 } from "../internal/entity.ts";
-import { PUB_SLUG_CHAR_RE } from "../internal/patterns.ts";
+import {
+  LETTERLIKE_FIRST_CHAR_RE,
+  PROFILE_SLUG_CHAR_RE,
+  PUB_SLUG_CHAR_RE,
+} from "../internal/patterns.ts";
 
 describe("addHttpsIfMissing", () => {
   const cases: [url: string, expected: string][] = [
@@ -141,5 +145,51 @@ describe("normalizeSlug length limit", () => {
       normalizeSlug("a".repeat(MAX_SLUG_LENGTH)),
       "a".repeat(MAX_SLUG_LENGTH),
     );
+  });
+});
+
+describe("LETTERLIKE_FIRST_CHAR_RE", () => {
+  // [first, last] code points of each allowed range, inclusive
+  const RANGES: [first: number, last: number][] = [
+    [0x2460, 0x24ff], // Enclosed Alphanumerics
+    [0x1f100, 0x1f10c], // digit full stop / comma, circled sans-serif zero
+    [0x1f110, 0x1f129], // parenthesized A-Z
+    [0x1f130, 0x1f149], // squared A-Z
+    [0x1f150, 0x1f169], // negative circled A-Z
+    [0x1f170, 0x1f189], // negative squared A-Z
+  ];
+
+  it("accepts exactly the listed ranges in U+2400-U+24FF and U+1F100-U+1F1FF", () => {
+    const allowed = (cp: number) =>
+      RANGES.some(([first, last]) => cp >= first && cp <= last);
+    for (const [start, end] of [
+      [0x2400, 0x24ff],
+      [0x1f100, 0x1f1ff],
+    ] as const) {
+      for (let cp = start; cp <= end; cp++) {
+        const char = String.fromCodePoint(cp);
+        assert.equal(
+          LETTERLIKE_FIRST_CHAR_RE.test(char),
+          allowed(cp),
+          `U+${cp.toString(16).toUpperCase()}`,
+        );
+      }
+    }
+  });
+
+  it("matches one code point only, and none of the literal slug characters", () => {
+    assert.equal(LETTERLIKE_FIRST_CHAR_RE.test("ⓐⓑ"), false);
+    assert.equal(LETTERLIKE_FIRST_CHAR_RE.test("a"), false);
+    assert.equal(LETTERLIKE_FIRST_CHAR_RE.test("®"), false);
+    assert.equal(LETTERLIKE_FIRST_CHAR_RE.test("\u{1F1E9}"), false);
+    // none of them is kept literally, so the output form is always an escape
+    for (const [first, last] of RANGES) {
+      for (let cp = first; cp <= last; cp++) {
+        assert.equal(
+          PROFILE_SLUG_CHAR_RE.test(String.fromCodePoint(cp)),
+          false,
+        );
+      }
+    }
   });
 });

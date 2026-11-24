@@ -205,7 +205,11 @@ library returns the **decoded** form:
   character that may not start a slug (`%C2%AE`, `%2E`, `%5F`, ...) is rejected
   in first position, exactly like the raw character. A kept escape (`%20`,
   `%2F`, an emoji) may not start a slug either; only a byte that is not valid
-  UTF-8 (`%FFjane`) may;
+  UTF-8 (`%FFjane`) may, and, since 3.1.2, in a person, company or school
+  slug, a letter-like symbol: a circled, parenthesized, squared or negative
+  letter or digit (U+2460–U+24FF and the A–Z/digit forms of U+1F100–U+1F189,
+  regional indicators excluded). Like any other symbol it is output
+  encoded: `/in/ⓞⓡⓐ-123456789` -> `%E2%93%9E%E2%93%A1%E2%93%90-123456789`;
 - the slug is put in Unicode NFC, so `cafe%CC%81` (decomposed) and `café`
   (composed) give the same `café`;
 - `extract*` functions keep the case of letters; `generateCanonical*`
@@ -228,12 +232,13 @@ the same way, against their stricter character set (no `~`, no symbols), so
   well-formed, but the library never contacts LinkedIn to check that the
   profile exists.
 - Person, company and school slugs must start (after any leading `-`/`~`)
-  with a letter, digit or an escape that is not valid UTF-8. After that the
+  with a letter, digit, an escape that is not valid UTF-8 or (since 3.1.2) a
+  letter-like symbol such as `ⓐ`, `⒜` or `①`, output encoded. After that the
   only symbols allowed literally are `©`, `®`, `°`, `℠` and `™`; any other
   symbol (emoji, slash-lookalikes such as `∕` or `⁄`, lookalikes such as `＜`
   or `˜`) is accepted raw or percent-encoded but always output encoded
-  (since 3.1.0; 3.0.0 rejected the raw form). A symbol in first position is
-  rejected in both spellings. Raw ASCII symbols (`<`, `+`, `=`, `|`, ...)
+  (since 3.1.0; 3.0.0 rejected the raw form). Any other symbol in first
+  position (`®`, `©`, emoji, flags) is rejected in both spellings. Raw ASCII symbols (`<`, `+`, `=`, `|`, ...)
   and raw whitespace are never accepted, and neither are invisible format
   characters such as U+200B or U+FEFF, raw or encoded (since 3.1.1; see
   "Slug normalization" for the list).

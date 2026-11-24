@@ -204,6 +204,199 @@ describe("raw symbols are percent-encoded like their encoded spelling", () => {
   }
 });
 
+describe("letter-like symbols may start a slug (since 3.1.2)", () => {
+  // an example that 3.0.0-3.1.1 rejected, raw and encoded
+  const RAW = "ⓞⓡⓐ-ⓓⓞⓔ-123456789";
+  const ENCODED =
+    "%E2%93%9E%E2%93%A1%E2%93%90-%E2%93%93%E2%93%9E%E2%93%94-123456789";
+
+  for (const slug of [ENCODED, RAW]) {
+    it(`https://www.linkedin.com/in/${slug}/ -> /in/${ENCODED}`, () => {
+      const url = `https://www.linkedin.com/in/${slug}/`;
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+      assert.equal(extractLinkedInProfileName(url), ENCODED);
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(url),
+        `https://linkedin.com/in/${ENCODED}`,
+      );
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(url, { keepTld: true }),
+        `https://www.linkedin.com/in/${ENCODED}`,
+      );
+      // escapes are matched case-insensitively and written with uppercase hex
+      assert.equal(extractLinkedInProfileName(url.toLowerCase()), ENCODED);
+    });
+  }
+
+  it(`${RAW}: raw == encoded for person, company and school`, () => {
+    assertSameAsEncoded(RAW);
+    assertSameAsEncoded(RAW, "/");
+    assertSameAsEncoded(RAW, "/?trk=x");
+  });
+
+  it(`${RAW}: the canonical URL is a fixed point`, () => {
+    const canonical = `https://linkedin.com/in/${ENCODED}`;
+    assert.equal(generateCanonicalLinkedInProfileUrl(canonical), canonical);
+    assert.equal(extractLinkedInProfileName(canonical), ENCODED);
+  });
+
+  it("a capital circled letter first stays its own escape, as after the first unit", () => {
+    // escapes are never case-folded: Ⓞ (U+24C4) and ⓞ (U+24DE) give
+    // different slugs, exactly as `aⓄ` and `aⓞ` already did in 3.1.1
+    const mixed = `Ⓞ${RAW.slice(1)}`;
+    const mixedEncoded = `%E2%93%84${ENCODED.slice("%E2%93%9E".length)}`;
+    for (const slug of [mixed, encodeURIComponent(mixed)]) {
+      const url = `https://www.linkedin.com/in/${slug}/`;
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+      assert.equal(extractLinkedInProfileName(url), mixedEncoded);
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(url),
+        `https://linkedin.com/in/${mixedEncoded}`,
+      );
+    }
+    assertSameAsEncoded(mixed);
+    assert.equal(
+      extractLinkedInProfileName("https://linkedin.com/in/aⓄ"),
+      "a%E2%93%84",
+    );
+  });
+
+  it("a company, school or numeric-looking slug starting with a circled letter or digit", () => {
+    assert.equal(
+      generateCanonicalCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/Ⓐcme-Labs/about/",
+      ),
+      "https://linkedin.com/company/%E2%92%B6cme-labs",
+    );
+    assert.equal(
+      extractCompanyLinkedInProfileName("linkedin.com/company/%e2%93%90cme"),
+      "%E2%93%90cme",
+    );
+    assert.equal(
+      generateCanonicalSchoolLinkedInProfileUrl(
+        "https://de.linkedin.com/school/ⓐcme",
+        { keepTld: true },
+      ),
+      "https://de.linkedin.com/school/%E2%93%90cme",
+    );
+    assert.equal(
+      isValidSchoolLinkedInProfileUrl("linkedin.com/school/ⓐcme"),
+      true,
+    );
+    assertSameAsEncoded("ⓐcme-labs");
+
+    // circled digits are not ASCII digits: not a numeric company id
+    const digits = "https://www.linkedin.com/company/①②";
+    assert.equal(isValidCompanyLinkedInProfileUrl(digits), true);
+    assert.equal(
+      extractCompanyLinkedInProfileName(digits),
+      "%E2%91%A0%E2%91%A1",
+    );
+    assert.equal(isNumericCompanyLinkedInProfileUrl(digits), false);
+    assert.equal(
+      isNumericCompanyLinkedInProfileUrl(
+        "https://www.linkedin.com/company/%E2%91%A0%E2%91%A1",
+      ),
+      false,
+    );
+  });
+
+  // other letter-like first units: [slug, extracted slug]
+  const FIRST: [slug: string, extracted: string][] = [
+    ["⒜lice", "%E2%92%9Clice"], // parenthesized small a, U+249C
+    ["⒜⒝⒞", "%E2%92%9C%E2%92%9D%E2%92%9E"],
+    ["①jane", "%E2%91%A0jane"], // circled digit one
+    ["⓿", "%E2%93%BF"], // U+24FF, last of the block
+    ["\u{1F130}cme", "%F0%9F%84%B0cme"], // squared A
+    ["\u{1F150}cme", "%F0%9F%85%90cme"], // negative circled A
+    ["\u{1F170}cme", "%F0%9F%85%B0cme"], // negative squared A
+    ["\u{1F189}", "%F0%9F%86%89"], // negative squared Z, last allowed
+    ["\u{1F10C}x", "%F0%9F%84%8Cx"], // negative circled sans-serif zero
+    ["-ⓐx", "-%E2%93%90x"],
+    ["~ⓐx", "~%E2%93%90x"],
+    ["ⓐ\u{FE0F}x", "%E2%93%90%EF%B8%8Fx"], // a variation selector after it is kept escaped
+  ];
+  for (const [slug, extracted] of FIRST) {
+    it(`${JSON.stringify(slug)} -> "${extracted}", raw == encoded`, () => {
+      const url = `https://linkedin.com/in/${slug}`;
+      assert.equal(isValidLinkedInProfileUrl(url), true);
+      assert.equal(extractLinkedInProfileName(url), extracted);
+      assert.equal(
+        extractLinkedInProfileName(
+          `https://linkedin.com/in/${encodeURIComponent(slug)}`,
+        ),
+        extracted,
+      );
+      assertSameAsEncoded(slug);
+    });
+  }
+
+  it("a circled letter after the first unit is unchanged", () => {
+    for (const slug of ["aⓞ-123456789", "a%E2%93%9E-123456789"]) {
+      const url = `https://www.linkedin.com/in/${slug}`;
+      assert.equal(extractLinkedInProfileName(url), "a%E2%93%9E-123456789");
+      assert.equal(
+        generateCanonicalLinkedInProfileUrl(url),
+        "https://linkedin.com/in/a%E2%93%9E-123456789",
+      );
+    }
+  });
+
+  // still rejected first, raw and encoded
+  const REJECTED = [
+    "®jane",
+    "©jane",
+    "°jane",
+    "™jane",
+    "℠jane",
+    "\u{1F51C}jane", // emoji
+    "\u{1F600}",
+    "\u{1F1E9}\u{1F1EA}-jane", // regional indicators: the flag 🇩🇪
+    "\u{1F1E6}jane", // a lone regional indicator
+    "\u{1F197}jane", // squared OK, an emoji
+    "\u{1F12B}jane", // circled italic C, a © lookalike
+    "\u{1F10D}jane", // circled zero with slash, just after the digit forms
+    "\u{1F18A}jane", // crossed negative squared P, just after Z
+    "─jane", // box drawing, just after the block
+    "∕jane", // slash-lookalike
+    "\u{200B}ⓐjane", // invisible before the letter-like one
+    "ⓐ\u{200B}jane", // invisible after it
+    "-®jane",
+  ];
+  for (const slug of REJECTED) {
+    it(`still rejects ${JSON.stringify(slug)} raw and encoded`, () => {
+      assertSameAsEncoded(slug);
+      for (const url of [
+        `https://linkedin.com/in/${slug}`,
+        `https://linkedin.com/in/${encodeURIComponent(slug)}`,
+        `https://linkedin.com/company/${slug}`,
+      ]) {
+        assert.equal(isValidLinkedInProfileUrl(url), false, url);
+        assert.equal(isValidCompanyLinkedInProfileUrl(url), false, url);
+        assert.equal(extractLinkedInProfileName(url), "", url);
+      }
+    });
+  }
+
+  it("still rejects %C2%AE and %2E first", () => {
+    for (const slug of ["%C2%AE", "%c2%aejane", "%2Ejane", "-%C2%AE-"]) {
+      const url = `https://linkedin.com/in/${slug}`;
+      assert.equal(isValidLinkedInProfileUrl(url), false, url);
+      assert.equal(generateCanonicalLinkedInProfileUrl(url), "", url);
+    }
+  });
+
+  it("legacy /pub/ names are unchanged: a letter-like first unit is rejected", () => {
+    const opts = { numeric: true };
+    for (const name of ["ⓐjane", "%E2%93%90jane"]) {
+      assert.equal(
+        isValidLinkedInProfileUrl(`linkedin.com/pub/${name}/1/2/3`, opts),
+        false,
+      );
+    }
+  });
+});
+
 describe("raw characters that are still rejected", () => {
   // the encoded spelling is rejected too: raw and encoded agree
   const SAME = [

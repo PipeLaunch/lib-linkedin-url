@@ -51,6 +51,10 @@ const CASES: [kind: string, expression: string][] = [
     "lib.isValidSchoolLinkedInProfileUrl(`https://linkedin.com/school/${slug}`)",
   ],
   [
+    "person, letter-like first unit",
+    "lib.isValidLinkedInProfileUrl(`https://linkedin.com/in/ⓐ${slug}`)",
+  ],
+  [
     "legacy /pub/",
     "lib.isValidLinkedInProfileUrl(`https://linkedin.com/pub/${slug}/1/2/3`, { numeric: true })",
   ],
