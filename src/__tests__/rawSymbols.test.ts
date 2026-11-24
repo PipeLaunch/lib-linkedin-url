@@ -59,21 +59,15 @@ function assertSameAsEncoded(slug: string, suffix = ""): void {
 }
 
 describe("raw symbols are percent-encoded like their encoded spelling", () => {
-  // live LinkedIn profiles that 3.0.0 rejected raw: [slug, extracted slug]
+  // examples that 3.0.0 rejected raw: [slug, extracted slug]
   const LIVE: [slug: string, encoded: string][] = [
-    [
-      "jacky-jiang\u{1F51C}-xds-796861111",
-      "jacky-jiang%F0%9F%94%9C-xds-796861111",
-    ],
+    ["alex-moss\u{1F51C}-xds-123456780", "alex-moss%F0%9F%94%9C-xds-123456780"],
     [
       "joão-gabriel-procópio-santos-\u{1F1E7}\u{1F1F7}-\u{1F1EE}\u{1F1F9}-a7043245",
       "joão-gabriel-procópio-santos-%F0%9F%87%A7%F0%9F%87%B7-%F0%9F%87%AE%F0%9F%87%B9-a7043245",
     ],
-    [
-      "sofia-heigis-♦\u{FE0F}-00b9205",
-      "sofia-heigis-%E2%99%A6%EF%B8%8F-00b9205",
-    ],
-    ["pcb、pcba", "pcb%E3%80%81pcba"],
+    ["mia-stone-♦\u{FE0F}-00a1234", "mia-stone-%E2%99%A6%EF%B8%8F-00a1234"],
+    ["abc、abcd", "abc%E3%80%81abcd"],
     [
       "robert-marking-\u{1F51C}miplondon-05b56513",
       "robert-marking-%F0%9F%94%9Cmiplondon-05b56513",

@@ -183,7 +183,7 @@ library returns the **decoded** form:
   character that may not appear literally (emoji, symbols outside
   `© ® ° ℠ ™`, lookalikes, U+FE0E/U+FE0F) is percent-encoded (UTF-8,
   uppercase hex) instead of rejecting the URL, so it gives the same result
-  as its encoded spelling: `jacky-jiang🔜-xds` -> `jacky-jiang%F0%9F%94%9C-xds`.
+  as its encoded spelling: `alex-moss🔜-xds` -> `alex-moss%F0%9F%94%9C-xds`.
   A lookalike is never kept literally, raw or encoded: `jane∕doe` ->
   `jane%E2%88%95doe`, so the output cannot pass for `jane/doe`. Raw ASCII
   symbols (`<`, `+`, `=`, `|`, `!`, ...), a bare `%`, whitespace (including

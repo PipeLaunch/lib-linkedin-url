@@ -208,7 +208,7 @@ function fitsLengthLimit(slug: string): boolean {
 /**
  * Percent-encodes (UTF-8, uppercase hex) every raw non-ASCII code point of a
  * person, company or school slug that may not appear literally in it
- * (`jacky-jiang🔜` -> `jacky-jiang%F0%9F%94%9C`, `jane∕doe` ->
+ * (`alex-moss🔜` -> `alex-moss%F0%9F%94%9C`, `jane∕doe` ->
  * `jane%E2%88%95doe`), so the raw spelling normalizes exactly like the
  * encoded one. ASCII characters are left alone: the slug pattern already
  * admits only the allowed ones. The slug pattern never captures whitespace,

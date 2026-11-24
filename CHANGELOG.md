@@ -49,10 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `™`, lookalikes, the variation selectors U+FE0E/U+FE0F) is now
   percent-encoded (UTF-8, uppercase hex) instead of making the URL invalid,
   so the raw and the encoded spelling give the same result from every
-  function. Live profiles such as `/in/jacky-jiang🔜-xds-796861111`,
-  `/in/sofia-heigis-♦️-00b9205` and `/in/pcb、pcba` extract
-  `jacky-jiang%F0%9F%94%9C-xds-796861111`, `sofia-heigis-%E2%99%A6%EF%B8%8F-00b9205`
-  and `pcb%E3%80%81pcba`, exactly as their encoded URLs did in 3.0.0.
+  function. Slugs such as `/in/alex-moss🔜-xds-123456780`,
+  `/in/mia-stone-♦️-00a1234` and `/in/abc、abcd` extract
+  `alex-moss%F0%9F%94%9C-xds-123456780`, `mia-stone-%E2%99%A6%EF%B8%8F-00a1234`
+  and `abc%E3%80%81abcd`, exactly as their encoded URLs did in 3.0.0.
 
 ### Changed
 
